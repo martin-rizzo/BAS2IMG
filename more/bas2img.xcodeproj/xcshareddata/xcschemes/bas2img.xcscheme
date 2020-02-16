@@ -52,7 +52,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "--import-font $PROJECT_DIR/msx.bmp"
+            argument = "--import-font -V $PROJECT_DIR/msx.bmp"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

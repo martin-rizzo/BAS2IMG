@@ -158,16 +158,102 @@ static Bool printErrorMessage(void) {
 
 
 /*=================================================================================================================*/
-#pragma mark - > IMPORTING / EXPORTING FONTS
+#pragma mark - > BITMAP
+
+#define getInt16(ptr) (ptr[0] | ptr[1]<<8); ptr+=2;
+#define getInt32(ptr) (ptr[0] | ptr[1]<<8 | ptr[2]<<16 | ptr[3]<<24); ptr+=4;
+
+typedef struct BitmapHeader {
+    unsigned fileType;
+    unsigned fileSize;
+    unsigned pixelDataOffset;
+    unsigned headerSize;
+    unsigned imageWidth;
+    unsigned imageHeight;
+    unsigned planes;
+    unsigned bitsPerPixel;
+    unsigned compression;
+    unsigned totalColors;
+    unsigned importantColors;
+    unsigned scanlineSize;
+} BitmapHeader;
+
+typedef struct GifHeader {
+    
+} GifHeader;
+
+Bool loadBitmapHeader(BitmapHeader *bmp, const Byte* data) {
+    const Byte *ptr = data;
+    bmp->fileType        = getInt16(ptr);
+    bmp->fileSize        = getInt32(ptr);
+    ptr+=4; /* skip reserved values */
+    bmp->pixelDataOffset = getInt32(ptr);
+    bmp->headerSize      = getInt32(ptr);
+    bmp->imageWidth      = getInt32(ptr);
+    bmp->imageHeight     = getInt32(ptr);
+    bmp->planes          = getInt16(ptr);
+    bmp->bitsPerPixel    = getInt16(ptr);
+    bmp->compression     = getInt32(ptr);
+    ptr+=12; /* skip imageSize, xPixelsPerMeter & yPixelsPerMeter */
+    bmp->totalColors     = getInt32(ptr);
+    bmp->importantColors = getInt32(ptr);
+    bmp->scanlineSize    = ((bmp->imageWidth*bmp->bitsPerPixel-1)/32+1)*4;
+    return TRUE;
+}
 
 
-Bool createFontHeaderFromBMP(FILE       *headerFile,
-                             FILE       *imageFile,
-                             const utf8 *imageFilePath,
-                             long        imageFileSize,
-                             Orientation orientation)
+/*=================================================================================================================*/
+#pragma mark - > EXPORTING FONTS
+
+
+/*=================================================================================================================*/
+#pragma mark - > IMPORTING FONTS
+
+/**
+ * Writes the C code to recreate the font image contained in the provided buffer
+ * @param headerFile    The file where the generated C code will be written
+ * @param buffer        The buffer containing the image
+ * @param scanlineSize  The number of bytes from a row to the next (can be negative)
+ * @param orientation   The order of characters in the image (vertical slices, horizontal slices)
+ */
+Bool writeFontCodeFromBufferData(FILE *headerFile, const Byte *buffer, int scanlineSize, Orientation orientation) {
+    int x,y,col,row,line;
+    const Byte *scanline;
+    const Bool upsideDown = TRUE;
+    assert( headerFile!=NULL );
+    assert( buffer!=NULL && scanlineSize>0 );
+    assert( orientation==HORIZONTAL || orientation==VERTICAL );
+    
+    for (y=0; y<16; ++y) {
+        for (x=0; x<16; ++x) {
+            col = orientation==HORIZONTAL ? x : y;
+            row = orientation==HORIZONTAL ? y : x;
+            for (line=0; line<8; ++line) {
+                if (upsideDown) { scanline = &buffer[ (127-row*8-line)*scanlineSize ]; }
+                else            { scanline = &buffer[ (row*8+line)*scanlineSize ];     }
+                fprintf(headerFile, "0x%02x,", scanline[col]);
+            }
+            fprintf(headerFile,"\n");
+        }
+    }
+    return TRUE;
+}
+
+/**
+ * Writes the C code to recreate the font image contained in the provided BMP data
+ * @param headerFile     The file where write the generated C code
+ * @param imageFile      The file with the image encoded in BMP format
+ * @param imageFilePath  The path to the BMP (used to report errors)
+ * @param imageFileSize  The size in bytes of the image file
+ * @param orientation    The order of characters in the image (vertical slices, horizontal slices)
+ */
+Bool writeFontCodeFromBitmapData(FILE       *headerFile,
+                                 FILE       *imageFile,
+                                 const utf8 *imageFilePath,
+                                 long        imageFileSize,
+                                 Orientation orientation)
 {
-    Byte *imageBuffer = NULL;
+    Byte *imageBuffer=NULL; BitmapHeader bmp;
     assert( headerFile!=NULL && imageFile!=NULL );
     assert( imageFilePath!=NULL );
     assert( imageFileSize>0 );
@@ -184,26 +270,49 @@ Bool createFontHeaderFromBMP(FILE       *headerFile,
         }
     }
     if (isRunning()) {
-        printf("image -> %c%c\n", imageBuffer[0], imageBuffer[1]);
+        loadBitmapHeader(&bmp, imageBuffer);
+        /*
+        if      (bmp.fileType!=0x4D42) { err(ERR_FILE_NOT_BMP); }
+        else if (bmp.fileSize!=imageFileSize) { err(ERR_BMP_INVALID_FORMAT); }
+        else if (bmp.imageWidth!=128) { err(ERR_BMP_MUST_BE_128PX); }
+        else if (bmp.imageHeight!=128) { err(ERR_BMP_MUST_BE_128PX); }
+        else if (bmp.planes!=1) { err(ERR_BMP_INVALID_FORMAT); }
+        else if (bmp.bitsPerPixels!=1) { err(ERR_BMP_MUST_BE_1BIT); }
+        else if (bmp.compression!=0) { err(ERR_BMP_); }
+         */
+    }
+    if (isRunning()) {
+        writeFontCodeFromBufferData(headerFile, &imageBuffer[bmp.pixelDataOffset], bmp.scanlineSize, orientation);
+
+        DLOG(("fileType: %d", bmp.fileType));
+        DLOG(("fileSize: %d", bmp.fileSize));
+        DLOG(("pixelDataOffset: %d", bmp.pixelDataOffset));
+        DLOG(("headerSize: %d", bmp.headerSize));
+        DLOG(("imageWidth: %d", bmp.imageWidth));
+        DLOG(("imageHeight: %d", bmp.imageHeight));
+        DLOG(("planes: %d", bmp.planes));
+        DLOG(("bitsPerPixel: %d", bmp.bitsPerPixel));
+        DLOG(("compression: %d", bmp.compression));
+        DLOG(("totalColors: %d", bmp.totalColors));
+        DLOG(("importantColors: %d", bmp.importantColors));
+        DLOG(("scanlineSize: %d", bmp.scanlineSize));
     }
     free(imageBuffer);
     return isRunning();
 }
 
 /**
- * Create a font header (.h) with the contain of font image
+ * Creates a font header (.h) containing the C code to recreate the font image
  *
- * The font image must be a 2-colors BMP file, it must be of size 256x256 pixels
+ * The font image must be a 2-colors BMP file, it must be of size 128x128 pixels
  * and it must contain all the characters arranged in 16 columns and 16 rows
- *
  * @param headerFilePath  The full path to the new header (.h) to create (can be NULL)
  * @param imageFilePath   The full path to the input image
  * @param imageFormat     The format of the input image (only BMP format is supported)
  * @param orientation     The order of characters in the image (vertical slices, horizontal slices)
  */
 Bool createFontHeader(const utf8 *headerFilePath, const utf8 *imageFilePath, ImageFormat imageFormat, Orientation orientation) {
-    FILE *imageFile=NULL, *headerFile=NULL;
-    long imageFileSize=0;
+    FILE *imageFile=NULL, *headerFile=NULL; long imageFileSize=0;
     assert( imageFilePath!=NULL );
     assert( imageFormat==BMP || imageFormat==GIF );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
@@ -230,7 +339,7 @@ Bool createFontHeader(const utf8 *headerFilePath, const utf8 *imageFilePath, Ima
     }
     if (isRunning()) { /* 4) proceed! */
         printf("Creating font header %s\n", headerFilePath);
-        createFontHeaderFromBMP(headerFile,imageFile,imageFilePath,imageFileSize,orientation);
+        writeFontCodeFromBitmapData(headerFile,imageFile,imageFilePath,imageFileSize,orientation);
     }
     /* clean up and return */
     if (imageFile     ) { fclose(imageFile ); imageFile =NULL; }
