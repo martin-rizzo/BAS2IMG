@@ -18,6 +18,6 @@ License
 -------
 Copyright (c) 2020 Martin Rizzo
 
-Licensed under the MIT license. <br/>
-See "LICENSE.md" file in the project root for details.
+**BAS2IMG** is released under the MIT license <br/>
+See ["LICENSE.md"](LICENSE.md) file in the project root for details.
 
