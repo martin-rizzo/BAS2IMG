@@ -210,53 +210,70 @@ Bool loadBitmapHeader(BitmapHeader *bmp, const Byte* data) {
 #pragma mark - > IMPORTING FONTS
 
 /**
- * Writes the C code to recreate the font image contained in the provided buffer
- * @param headerFile    The file where the generated C code will be written
- * @param buffer        The buffer containing the image
- * @param scanlineSize  The number of bytes from a row to the next (can be negative)
+ * Writes C code representing an array containing all the font image stored in the buffer
+ * @param outputFile    The file where the generated C code will be written
+ * @param arrayName     The name of the C array
+ * @param imageBuffer   The buffer containing the image of 256 characters of 8x8 pixels (1 bit per pixel)
+ * @param scanlineSize  The number of bytes from one line of pixels to the next (negative means "upside-down" image)
  * @param orientation   The order of characters in the image (vertical slices, horizontal slices)
  */
-Bool writeFontCodeFromBufferData(FILE *headerFile, const Byte *buffer, int scanlineSize, Orientation orientation) {
-    int x,y,col,row,line;
-    const Byte *scanline;
-    const Bool upsideDown = TRUE;
-    assert( headerFile!=NULL );
-    assert( buffer!=NULL && scanlineSize>0 );
+Bool writeCArrayFromImageBuffer(FILE       *outputFile,
+                                const utf8 *arrayName,
+                                const Byte *imageBuffer,
+                                int         scanlineSize,
+                                Orientation orientation) {
+    Bool upsideDown = FALSE;
+    int x,y,col,row,line,segment,charIdx; const utf8 *separator;
+    const int lastCharIdx=255;
+    assert( outputFile!=NULL );
+    assert( arrayName!=NULL && strlen(arrayName)>0 );
+    assert( imageBuffer!=NULL && scanlineSize!=0 );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
-    
-    for (y=0; y<16; ++y) {
-        for (x=0; x<16; ++x) {
-            col = orientation==HORIZONTAL ? x : y;
-            row = orientation==HORIZONTAL ? y : x;
-            for (line=0; line<8; ++line) {
-                if (upsideDown) { scanline = &buffer[ (127-row*8-line)*scanlineSize ]; }
-                else            { scanline = &buffer[ (row*8+line)*scanlineSize ];     }
-                fprintf(headerFile, "0x%02x,", scanline[col]);
+    fprintf(outputFile, "const Byte font_%s[2048] = {", arrayName);
+
+    /* fix "upside-down" images */
+    if (scanlineSize<0) { scanlineSize=-scanlineSize; upsideDown=TRUE; }
+    /* write one by one all of 256 characters */
+    for (charIdx=0,y=0; y<16; ++y) {
+        for (x=0; x<16; ++x,++charIdx) {
+            assert( charIdx<=lastCharIdx );
+            if ((charIdx%2)==0) { fprintf(outputFile,"\n    "); }
+            else                { fprintf(outputFile," "     ); }
+
+            col = (orientation==HORIZONTAL ? x : y);
+            row = (orientation==HORIZONTAL ? y : x);
+            for (segment=0; segment<8; ++segment) {
+                assert( scanlineSize>0 );
+                line      = row*8+segment; if (upsideDown) { line = 127-line; }
+                separator = (charIdx==lastCharIdx && segment==7) ? "" : ",";
+                fprintf(outputFile, "0x%02x%s", imageBuffer[ (line*scanlineSize)+col ], separator);
             }
-            fprintf(headerFile,"\n");
         }
     }
+    fprintf(outputFile, "\n};\n");
     return TRUE;
 }
 
 /**
- * Writes the C code to recreate the font image contained in the provided BMP data
- * @param headerFile     The file where write the generated C code
+ * Writes the C code representing an array containing the font image stored in a BMP file
+ * @param outputFile     The file where the generated C code will be written
+ * @param arrayName      The name of the C array
  * @param imageFile      The file with the image encoded in BMP format
- * @param imageFilePath  The path to the BMP (used to report errors)
- * @param imageFileSize  The size in bytes of the image file
+ * @param imageFileSize  The size in bytes of the BMP file
+ * @param imageFilePath  The path to the BMP file (used for error report)
  * @param orientation    The order of characters in the image (vertical slices, horizontal slices)
  */
-Bool writeFontCodeFromBitmapData(FILE       *headerFile,
-                                 FILE       *imageFile,
-                                 const utf8 *imageFilePath,
-                                 long        imageFileSize,
-                                 Orientation orientation)
+Bool writeCArrayFromBitmapFile(FILE       *outputFile,
+                               const utf8 *arrayName,
+                               FILE       *imageFile,
+                               long        imageFileSize,
+                               const utf8 *imageFilePath,
+                               Orientation orientation)
 {
     Byte *imageBuffer=NULL; BitmapHeader bmp;
-    assert( headerFile!=NULL && imageFile!=NULL );
-    assert( imageFilePath!=NULL );
-    assert( imageFileSize>0 );
+    assert( outputFile!=NULL );
+    assert( arrayName!=NULL && strlen(arrayName)>0 );
+    assert( imageFile!=NULL && imageFileSize>0 && imageFilePath!=NULL );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
     assert( isRunning() );
     
@@ -282,7 +299,8 @@ Bool writeFontCodeFromBitmapData(FILE       *headerFile,
          */
     }
     if (isRunning()) {
-        writeFontCodeFromBufferData(headerFile, &imageBuffer[bmp.pixelDataOffset], bmp.scanlineSize, orientation);
+        writeCArrayFromImageBuffer(outputFile, arrayName,
+                                   &imageBuffer[bmp.pixelDataOffset], -bmp.scanlineSize, orientation);
 
         DLOG(("fileType: %d", bmp.fileType));
         DLOG(("fileSize: %d", bmp.fileSize));
@@ -339,7 +357,7 @@ Bool createFontHeader(const utf8 *headerFilePath, const utf8 *imageFilePath, Ima
     }
     if (isRunning()) { /* 4) proceed! */
         printf("Creating font header %s\n", headerFilePath);
-        writeFontCodeFromBitmapData(headerFile,imageFile,imageFilePath,imageFileSize,orientation);
+        writeCArrayFromBitmapFile(headerFile,"msx",imageFile,imageFileSize,imageFilePath,orientation);
     }
     /* clean up and return */
     if (imageFile     ) { fclose(imageFile ); imageFile =NULL; }
