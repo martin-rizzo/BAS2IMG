@@ -48,8 +48,10 @@ typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean */
 
 /* supported errors */
 typedef enum ErrorID {
-    SUCCESS=0, ERR_UNKNOWN_PARAM=-1000, ERR_FILE_NOT_FOUND, ERR_FILE_TOO_LARGE, ERR_FILE_TOO_SMALL,
-    ERR_CANNOT_CREATE_FILE, ERR_CANNOT_READ_FILE, ERR_NOT_ENOUGH_MEMORY, ERR_GIF_NOT_SUPPORTED
+    SUCCESS=0, ERR_UNKNOWN_PARAM, ERR_FILE_NOT_FOUND, ERR_FILE_TOO_LARGE, ERR_FILE_TOO_SMALL,
+    ERR_CANNOT_CREATE_FILE, ERR_CANNOT_READ_FILE, ERR_NOT_ENOUGH_MEMORY, ERR_GIF_NOT_SUPPORTED,
+    ERR_FILE_IS_NOT_BMP, ERR_BMP_MUST_BE_128PX, ERR_BMP_MUST_BE_1BIT,
+    ERR_BMP_UNSUPPORTED_FORMAT, ERR_BMP_INVALID_FORMAT
 } ErrorID;
 
 typedef enum ExtensionMethod { OPTIONAL_EXTENSION, FORCED_EXTENSION } ExtensionMethod;
@@ -67,13 +69,14 @@ typedef struct Error { ErrorID id; const utf8 *str; } Error;
  * Replaces the sign '$' contained in message with the text provided in 'str'
  * @param buffer   The buffer where the composed string will be written
  * @param message  The message to copy to the buffer
- * @param str      The text to use as a replacement for the sign '$'
+ * @param str      The text to use as a replacement for the sign '$' (optional, can be NULL)
  */
 static const utf8 * strblend(utf8 *buffer, const utf8 *message, const utf8 *str) {
+    assert( buffer!=NULL && message!=NULL );
     utf8 *dest=buffer; const utf8 *ptr=message;
     while (*ptr!='$' && *ptr!='\0') { *dest++=*ptr++; }
-    if (*ptr=='$') { ++ptr; while (*str!='\0') { *dest++=*str++; } while (*ptr!='\0') { *dest++=*ptr++; } }
-    *dest='\0';
+    if (*ptr=='$' && str) { ++ptr; while (*str!='\0') { *dest++=*str++; } }
+    while (*ptr!='\0') { *dest++=*ptr++; }; *dest='\0';
     return buffer;
 }
 
@@ -116,8 +119,9 @@ static const utf8* allocFilePath(const utf8* originalFilePath, const utf8* newEx
 static Error theError = { SUCCESS, NULL };
 
 static Bool err2(ErrorID errorID, const utf8 *str) {
+    free((void*)theError.str);
     theError.id  = errorID;
-    theError.str = str;
+    theError.str = strdup(str);
     return errorID==SUCCESS;
 }
 
@@ -138,13 +142,18 @@ static Bool printErrorMessage(void) {
     switch (error->id) {
         case SUCCESS:                message = "SUCCESS"; break;
         case ERR_UNKNOWN_PARAM:      message = "unknown parameter '$'"; break;
-        case ERR_FILE_NOT_FOUND:     message = "file not found";    break;
-        case ERR_FILE_TOO_LARGE:     message = "the file '$' is too large"; break;
-        case ERR_FILE_TOO_SMALL:     message = "the file '$' is too small"; break;
-        case ERR_CANNOT_CREATE_FILE: message = "the file '$' cannot be created"; break;
-        case ERR_CANNOT_READ_FILE:   message = "the file '$' cannot be accessed"; break;
+        case ERR_FILE_NOT_FOUND:     message = "file '$' cannot be found"; break;
+        case ERR_FILE_TOO_LARGE:     message = "file '$' is too large"; break;
+        case ERR_FILE_TOO_SMALL:     message = "file '$' is too small"; break;
+        case ERR_CANNOT_CREATE_FILE: message = "file '$' cannot be created"; break;
+        case ERR_CANNOT_READ_FILE:   message = "file '$' cannot be accessed"; break;
         case ERR_NOT_ENOUGH_MEMORY:  message = "not enough memory"; break;
         case ERR_GIF_NOT_SUPPORTED:  message = "GIF format isn't supported yet"; break;
+        case ERR_FILE_IS_NOT_BMP:    message = "file '$' is not a BMP file"; break;
+        case ERR_BMP_MUST_BE_128PX:  message = "image in '$' must have a size of exactly 128 by 128 pixels"; break;
+        case ERR_BMP_MUST_BE_1BIT:   message = "image in '$' must be 1 bit per pixel monochrome bitmap"; break;
+        case ERR_BMP_UNSUPPORTED_FORMAT: message = "the BMP format in '$' is not supported by BAS2IMG"; break;
+        case ERR_BMP_INVALID_FORMAT: message = "file '$' has a wrong BMP format or is corrupt"; break;
         default:                     message = "unknown error";     break;
     }
     if (error->str)  {
@@ -152,8 +161,9 @@ static Bool printErrorMessage(void) {
         message = strblend(buffer,message,error->str);
     }
     printf("%s %s\n", "error:", message);
-    free( buffer );
-    return error->id!=SUCCESS;
+    free( (void*)buffer     ); buffer=NULL;
+    free( (void*)error->str ); error->str=NULL;
+    return error->id;
 }
 
 
@@ -198,6 +208,20 @@ Bool loadBitmapHeader(BitmapHeader *bmp, const Byte* data) {
     bmp->totalColors     = getInt32(ptr);
     bmp->importantColors = getInt32(ptr);
     bmp->scanlineSize    = ((bmp->imageWidth*bmp->bitsPerPixel-1)/32+1)*4;
+    /*
+    DLOG(("fileType: %d", bmp.fileType));
+    DLOG(("fileSize: %d", bmp.fileSize));
+    DLOG(("pixelDataOffset: %d", bmp.pixelDataOffset));
+    DLOG(("headerSize: %d", bmp.headerSize));
+    DLOG(("imageWidth: %d", bmp.imageWidth));
+    DLOG(("imageHeight: %d", bmp.imageHeight));
+    DLOG(("planes: %d", bmp.planes));
+    DLOG(("bitsPerPixel: %d", bmp.bitsPerPixel));
+    DLOG(("compression: %d", bmp.compression));
+    DLOG(("totalColors: %d", bmp.totalColors));
+    DLOG(("importantColors: %d", bmp.importantColors));
+    DLOG(("scanlineSize: %d", bmp.scanlineSize));
+    */
     return TRUE;
 }
 
@@ -239,7 +263,6 @@ Bool writeCArrayFromImageBuffer(FILE       *outputFile,
             assert( charIdx<=lastCharIdx );
             if ((charIdx%2)==0) { fprintf(outputFile,"\n    "); }
             else                { fprintf(outputFile," "     ); }
-
             col = (orientation==HORIZONTAL ? x : y);
             row = (orientation==HORIZONTAL ? y : x);
             for (segment=0; segment<8; ++segment) {
@@ -270,50 +293,42 @@ Bool writeCArrayFromBitmapFile(FILE       *outputFile,
                                const utf8 *imageFilePath,
                                Orientation orientation)
 {
+    static const unsigned requiredWidth  = 128;
+    static const unsigned requiredHeight = 128;
+    int pixelDataSize, requiredDataSize;
     Byte *imageBuffer=NULL; BitmapHeader bmp;
+    
     assert( outputFile!=NULL );
     assert( arrayName!=NULL && strlen(arrayName)>0 );
     assert( imageFile!=NULL && imageFileSize>0 && imageFilePath!=NULL );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
     assert( isRunning() );
     
-    if (isRunning()) {
+    if (isRunning()) { /* 1) allocate space to load the complete file to memory */
         imageBuffer = malloc(imageFileSize);
         if (!imageBuffer) { err(ERR_NOT_ENOUGH_MEMORY); }
     }
-    if (isRunning()) {
-        if ( fread(imageBuffer,1,imageFileSize,imageFile)!=imageFileSize) {
+    if (isRunning()) { /* 2) load the file */
+        if ( imageFileSize!=fread(imageBuffer,1,imageFileSize,imageFile) ) {
             err2(ERR_CANNOT_READ_FILE,imageFilePath);
         }
     }
-    if (isRunning()) {
+    if (isRunning()) { /* 3) extract bitmap header and verify correct format */
         loadBitmapHeader(&bmp, imageBuffer);
-        /*
-        if      (bmp.fileType!=0x4D42) { err(ERR_FILE_NOT_BMP); }
-        else if (bmp.fileSize!=imageFileSize) { err(ERR_BMP_INVALID_FORMAT); }
-        else if (bmp.imageWidth!=128) { err(ERR_BMP_MUST_BE_128PX); }
-        else if (bmp.imageHeight!=128) { err(ERR_BMP_MUST_BE_128PX); }
-        else if (bmp.planes!=1) { err(ERR_BMP_INVALID_FORMAT); }
-        else if (bmp.bitsPerPixels!=1) { err(ERR_BMP_MUST_BE_1BIT); }
-        else if (bmp.compression!=0) { err(ERR_BMP_); }
-         */
+        pixelDataSize    = (unsigned)imageFileSize-bmp.pixelDataOffset;
+        requiredDataSize = (requiredWidth/8)*requiredHeight;
+        if      (bmp.fileType     !=0x4D42         ) { err(ERR_FILE_IS_NOT_BMP       ); }
+        else if (bmp.fileSize     !=imageFileSize  ) { err(ERR_BMP_INVALID_FORMAT    ); }
+        else if (bmp.imageWidth   !=requiredWidth  ) { err(ERR_BMP_MUST_BE_128PX     ); }
+        else if (bmp.imageHeight  !=requiredHeight ) { err(ERR_BMP_MUST_BE_128PX     ); }
+        else if (bmp.planes       !=1              ) { err(ERR_BMP_INVALID_FORMAT    ); }
+        else if (bmp.bitsPerPixel !=1              ) { err(ERR_BMP_MUST_BE_1BIT      ); }
+        else if (bmp.compression  !=0              ) { err(ERR_BMP_UNSUPPORTED_FORMAT); }
+        else if (pixelDataSize    <requiredDataSize) { err(ERR_BMP_INVALID_FORMAT    ); }
     }
-    if (isRunning()) {
+    if (isRunning()) { /* 4) write the C array to the output file */
         writeCArrayFromImageBuffer(outputFile, arrayName,
                                    &imageBuffer[bmp.pixelDataOffset], -bmp.scanlineSize, orientation);
-
-        DLOG(("fileType: %d", bmp.fileType));
-        DLOG(("fileSize: %d", bmp.fileSize));
-        DLOG(("pixelDataOffset: %d", bmp.pixelDataOffset));
-        DLOG(("headerSize: %d", bmp.headerSize));
-        DLOG(("imageWidth: %d", bmp.imageWidth));
-        DLOG(("imageHeight: %d", bmp.imageHeight));
-        DLOG(("planes: %d", bmp.planes));
-        DLOG(("bitsPerPixel: %d", bmp.bitsPerPixel));
-        DLOG(("compression: %d", bmp.compression));
-        DLOG(("totalColors: %d", bmp.totalColors));
-        DLOG(("importantColors: %d", bmp.importantColors));
-        DLOG(("scanlineSize: %d", bmp.scanlineSize));
     }
     free(imageBuffer);
     return isRunning();
@@ -442,7 +457,7 @@ int main(int argc, char* argv[]) {
     else if (mode==GENERATE_IMAGE) {
         
     }
-    return 0;
+    return printErrorMessage();
 }
 
 
