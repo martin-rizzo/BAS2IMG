@@ -81,8 +81,8 @@ static const Font * getFont(const utf8 *name) {
  * Lists all available fonts
  */
 static void listAllFonts(void) {
-    printf("Available fonts:\n");
-    int i; for (i=0; theFonts[i]; ++i) {
+    int i;
+    printf("Available fonts:\n"); for (i=0; theFonts[i]; ++i) {
         printf("    %-10s = %s\n", theFonts[i]->name, theFonts[i]->description);
     }
 }
@@ -97,9 +97,9 @@ static void listAllFonts(void) {
  * @param str      The text to use as a replacement for the sign '$' (optional, can be NULL)
  */
 static const utf8 * strblend(utf8 *buffer, const utf8 *message, const utf8 *str) {
+    utf8 *dest; const utf8 *ptr;
     assert( buffer!=NULL && message!=NULL );
-    utf8 *dest=buffer; const utf8 *ptr=message;
-    while (*ptr!='$' && *ptr!='\0') { *dest++=*ptr++; }
+    dest=buffer; ptr=message; while (*ptr!='$' && *ptr!='\0') { *dest++=*ptr++; }
     if (*ptr=='$' && str) { ++ptr; while (*str!='\0') { *dest++=*str++; } }
     while (*ptr!='\0') { *dest++=*ptr++; }; *dest='\0';
     return buffer;
@@ -119,10 +119,9 @@ static long getFileSize(FILE *file) {
  */
 
 static const utf8* allocFilePath(const utf8* originalFilePath, const utf8* newExtension, ExtensionMethod method) {
+    const utf8 *fileName, *sour; utf8 *dest, *oldExtension=NULL;
     assert( originalFilePath!=NULL && newExtension!=NULL );
     assert( method==OPTIONAL_EXTENSION || method==FORCED_EXTENSION );
-    const utf8 *sour; utf8 *dest, *oldExtension=NULL;
-    const utf8 *fileName;
     
     fileName = dest = malloc( strlen(originalFilePath)+strlen(newExtension)+1 );
     for (sour=originalFilePath; *sour!='\0'; *dest++=*sour++) {
@@ -213,9 +212,11 @@ typedef struct BitmapHeader {
     unsigned scanlineSize;
 } BitmapHeader;
 
+/*
 typedef struct GifHeader {
     
 } GifHeader;
+*/
 
 Bool loadBitmapHeader(BitmapHeader *bmp, const Byte* data) {
     const Byte *ptr = data;
