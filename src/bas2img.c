@@ -197,11 +197,11 @@ static Bool printErrorMessage(void) {
 
 
 /*=================================================================================================================*/
-#pragma mark - > EXPORTING FONTS
+#pragma mark - > EXPORTING FONTS TO FILE
 
 
 /*=================================================================================================================*/
-#pragma mark - > IMPORTING FONTS
+#pragma mark - > IMPORTING FONT INTO C-ARRAY
 
 /**
  * Writes C code representing an array containing all the font image stored in the buffer
@@ -266,7 +266,7 @@ Bool writeCArrayFromBitmapFile(FILE       *outputFile,
     static const unsigned requiredWidth  = 128;
     static const unsigned requiredHeight = 128;
     int pixelDataSize, requiredDataSize;
-    Byte *imageBuffer=NULL; BitmapHeader bmp;
+    Byte *imageBuffer=NULL; BmpHeader bmp;
     
     assert( outputFile!=NULL );
     assert( arrayName!=NULL && strlen(arrayName)>0 );
@@ -284,7 +284,7 @@ Bool writeCArrayFromBitmapFile(FILE       *outputFile,
         }
     }
     if (isRunning()) { /* 3) extract bitmap header */
-        if (!loadBitmapHeader(&bmp, imageBuffer, imageFileSize)) { err(ERR_FILE_IS_NOT_BMP); }
+        if (!extractBmpHeader(&bmp, imageBuffer, imageFileSize)) { err(ERR_FILE_IS_NOT_BMP); }
     }
     if (isRunning()) { /* 4) verify correct bitmap format */
         pixelDataSize    = (unsigned)imageFileSize-bmp.pixelDataOffset;

@@ -31,9 +31,9 @@
  */
 #ifndef bas2img_bmp_h
 #define bas2img_bmp_h
+#include <stdio.h>
 
-
-typedef struct BitmapHeader {
+typedef struct BmpHeader {
     unsigned fileType;
     unsigned fileSize;
     unsigned pixelDataOffset;
@@ -46,9 +46,16 @@ typedef struct BitmapHeader {
     unsigned totalColors;
     unsigned importantColors;
     unsigned scanlineSize;
-} BitmapHeader;
+} BmpHeader;
 
-int loadBitmapHeader(BitmapHeader *bmp, const void* data, long dataSize);
 
+int setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors);
+
+int extractBmpHeader(BmpHeader *header, const void* data, long dataSize);
+
+int fwriteBmp(const BmpHeader *header,
+              const void      *colorTable, int colorTableSize,
+              const void      *pixelData , int pixelDataSize,
+              FILE *file);
 
 #endif /* bas2img_bmp_h */
