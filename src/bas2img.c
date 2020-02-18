@@ -34,6 +34,8 @@
 #include <string.h>
 #include <assert.h>
 #include "font.h"
+#include "bmp.h"
+#include "gif.h"
 #define VERSION   "0.1"
 #define COPYRIGHT "Copyright (c) 2020 Martin Rizzo"
 #define MIN_FILE_SIZE   (0)           /* < minimum size for loadable files (in bytes)   */
@@ -72,10 +74,12 @@ static const Font *theFonts[] = { &font__msx, &font__msx_din, NULL };
 /**
  * Returns the information of the font that match with the provided name
  */
+/*
 static const Font * getFont(const utf8 *name) {
     int i=0; while ( theFonts[i]!=NULL && strcmp(theFonts[i]->name,name)!=0 ) { ++i; }
     return theFonts[i];
 }
+*/
 
 /**
  * Lists all available fonts
@@ -191,66 +195,6 @@ static Bool printErrorMessage(void) {
 }
 
 
-/*=================================================================================================================*/
-#pragma mark - > BITMAP
-
-#define getInt16(ptr) (ptr[0] | ptr[1]<<8); ptr+=2;
-#define getInt32(ptr) (ptr[0] | ptr[1]<<8 | ptr[2]<<16 | ptr[3]<<24); ptr+=4;
-
-typedef struct BitmapHeader {
-    unsigned fileType;
-    unsigned fileSize;
-    unsigned pixelDataOffset;
-    unsigned headerSize;
-    unsigned imageWidth;
-    unsigned imageHeight;
-    unsigned planes;
-    unsigned bitsPerPixel;
-    unsigned compression;
-    unsigned totalColors;
-    unsigned importantColors;
-    unsigned scanlineSize;
-} BitmapHeader;
-
-/*
-typedef struct GifHeader {
-    
-} GifHeader;
-*/
-
-Bool loadBitmapHeader(BitmapHeader *bmp, const Byte* data) {
-    const Byte *ptr = data;
-    bmp->fileType        = getInt16(ptr);
-    bmp->fileSize        = getInt32(ptr);
-    ptr+=4; /* skip reserved values */
-    bmp->pixelDataOffset = getInt32(ptr);
-    bmp->headerSize      = getInt32(ptr);
-    bmp->imageWidth      = getInt32(ptr);
-    bmp->imageHeight     = getInt32(ptr);
-    bmp->planes          = getInt16(ptr);
-    bmp->bitsPerPixel    = getInt16(ptr);
-    bmp->compression     = getInt32(ptr);
-    ptr+=12; /* skip imageSize, xPixelsPerMeter & yPixelsPerMeter */
-    bmp->totalColors     = getInt32(ptr);
-    bmp->importantColors = getInt32(ptr);
-    bmp->scanlineSize    = ((bmp->imageWidth*bmp->bitsPerPixel-1)/32+1)*4;
-    /*
-    DLOG(("fileType: %d", bmp.fileType));
-    DLOG(("fileSize: %d", bmp.fileSize));
-    DLOG(("pixelDataOffset: %d", bmp.pixelDataOffset));
-    DLOG(("headerSize: %d", bmp.headerSize));
-    DLOG(("imageWidth: %d", bmp.imageWidth));
-    DLOG(("imageHeight: %d", bmp.imageHeight));
-    DLOG(("planes: %d", bmp.planes));
-    DLOG(("bitsPerPixel: %d", bmp.bitsPerPixel));
-    DLOG(("compression: %d", bmp.compression));
-    DLOG(("totalColors: %d", bmp.totalColors));
-    DLOG(("importantColors: %d", bmp.importantColors));
-    DLOG(("scanlineSize: %d", bmp.scanlineSize));
-    */
-    return TRUE;
-}
-
 
 /*=================================================================================================================*/
 #pragma mark - > EXPORTING FONTS
@@ -284,7 +228,7 @@ Bool writeCArrayFromImageBuffer(FILE       *outputFile,
     /* fix "upside-down" images */
     if (scanlineSize<0) { scanlineSize=-scanlineSize; upsideDown=TRUE; }
     /* write one by one all of 256 characters */
-    for (charIdx=0,y=0; y<16; ++y) {
+    charIdx=0; for (y=0; y<16; ++y) {
         for (x=0; x<16; ++x,++charIdx) {
             assert( charIdx<=lastCharIdx );
             if ((charIdx%2)==0) { fprintf(outputFile,"\n    "); }
@@ -339,8 +283,10 @@ Bool writeCArrayFromBitmapFile(FILE       *outputFile,
             err2(ERR_CANNOT_READ_FILE,imageFilePath);
         }
     }
-    if (isRunning()) { /* 3) extract bitmap header and verify correct format */
-        loadBitmapHeader(&bmp, imageBuffer);
+    if (isRunning()) { /* 3) extract bitmap header */
+        if (!loadBitmapHeader(&bmp, imageBuffer, imageFileSize)) { err(ERR_FILE_IS_NOT_BMP); }
+    }
+    if (isRunning()) { /* 4) verify correct bitmap format */
         pixelDataSize    = (unsigned)imageFileSize-bmp.pixelDataOffset;
         requiredDataSize = (requiredWidth/8)*requiredHeight;
         if      (bmp.fileType     !=0x4D42         ) { err(ERR_FILE_IS_NOT_BMP       ); }
@@ -352,7 +298,7 @@ Bool writeCArrayFromBitmapFile(FILE       *outputFile,
         else if (bmp.compression  !=0              ) { err(ERR_BMP_UNSUPPORTED_FORMAT); }
         else if (pixelDataSize    <requiredDataSize) { err(ERR_BMP_INVALID_FORMAT    ); }
     }
-    if (isRunning()) { /* 4) write the C array to the output file */
+    if (isRunning()) { /* 5) write the C array to the output file */
         writeCArrayFromImageBuffer(outputFile, arrayName,
                                    &imageBuffer[bmp.pixelDataOffset], -bmp.scanlineSize, orientation);
     }

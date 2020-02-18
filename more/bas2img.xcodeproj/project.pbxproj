@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		5B0F006123F872AD00A1D6D1 /* bas2img.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B0F005F23F872AD00A1D6D1 /* bas2img.c */; };
+		5B23CDAD23FC3FD200C628E5 /* bmp.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B23CDAA23FC3FD200C628E5 /* bmp.c */; };
+		5B23CDAE23FC3FD200C628E5 /* gif.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B23CDAB23FC3FD200C628E5 /* gif.c */; };
 		5B6BA56A23FB540D00C0671F /* font__msx.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B6BA56823FB540C00C0671F /* font__msx.c */; };
 		5B6BA56B23FB540D00C0671F /* font__msx-din.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B6BA56923FB540D00C0671F /* font__msx-din.c */; };
 /* End PBXBuildFile section */
@@ -27,6 +29,10 @@
 /* Begin PBXFileReference section */
 		5B0F005E23F872AD00A1D6D1 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		5B0F005F23F872AD00A1D6D1 /* bas2img.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bas2img.c; sourceTree = "<group>"; };
+		5B23CDA923FC3FD100C628E5 /* bmp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bmp.h; sourceTree = "<group>"; };
+		5B23CDAA23FC3FD200C628E5 /* bmp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bmp.c; sourceTree = "<group>"; };
+		5B23CDAB23FC3FD200C628E5 /* gif.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gif.c; sourceTree = "<group>"; };
+		5B23CDAC23FC3FD200C628E5 /* gif.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gif.h; sourceTree = "<group>"; };
 		5B6BA56823FB540C00C0671F /* font__msx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = font__msx.c; sourceTree = "<group>"; };
 		5B6BA56923FB540D00C0671F /* font__msx-din.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "font__msx-din.c"; sourceTree = "<group>"; };
 		5B6BA56C23FB541D00C0671F /* font.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = font.h; sourceTree = "<group>"; };
@@ -51,6 +57,10 @@
 				5B6BA56C23FB541D00C0671F /* font.h */,
 				5B6BA56923FB540D00C0671F /* font__msx-din.c */,
 				5B6BA56823FB540C00C0671F /* font__msx.c */,
+				5B23CDA923FC3FD100C628E5 /* bmp.h */,
+				5B23CDAA23FC3FD200C628E5 /* bmp.c */,
+				5B23CDAC23FC3FD200C628E5 /* gif.h */,
+				5B23CDAB23FC3FD200C628E5 /* gif.c */,
 				5B0F005E23F872AD00A1D6D1 /* Makefile */,
 			);
 			name = src;
@@ -131,6 +141,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				5B0F006123F872AD00A1D6D1 /* bas2img.c in Sources */,
+				5B23CDAE23FC3FD200C628E5 /* gif.c in Sources */,
+				5B23CDAD23FC3FD200C628E5 /* bmp.c in Sources */,
 				5B6BA56B23FB540D00C0671F /* font__msx-din.c in Sources */,
 				5B6BA56A23FB540D00C0671F /* font__msx.c in Sources */,
 			);
