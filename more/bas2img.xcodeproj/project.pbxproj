@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		5B0F006123F872AD00A1D6D1 /* bas2img.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B0F005F23F872AD00A1D6D1 /* bas2img.c */; };
+		5B6BA56A23FB540D00C0671F /* font__msx.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B6BA56823FB540C00C0671F /* font__msx.c */; };
+		5B6BA56B23FB540D00C0671F /* font__msx-din.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B6BA56923FB540D00C0671F /* font__msx-din.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +27,9 @@
 /* Begin PBXFileReference section */
 		5B0F005E23F872AD00A1D6D1 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		5B0F005F23F872AD00A1D6D1 /* bas2img.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bas2img.c; sourceTree = "<group>"; };
+		5B6BA56823FB540C00C0671F /* font__msx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = font__msx.c; sourceTree = "<group>"; };
+		5B6BA56923FB540D00C0671F /* font__msx-din.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "font__msx-din.c"; sourceTree = "<group>"; };
+		5B6BA56C23FB541D00C0671F /* font.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = font.h; sourceTree = "<group>"; };
 		5BD0E30623F871850013F982 /* bas2img */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bas2img; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -42,8 +47,11 @@
 		5B0F005D23F872AD00A1D6D1 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				5B0F005E23F872AD00A1D6D1 /* Makefile */,
 				5B0F005F23F872AD00A1D6D1 /* bas2img.c */,
+				5B6BA56C23FB541D00C0671F /* font.h */,
+				5B6BA56923FB540D00C0671F /* font__msx-din.c */,
+				5B6BA56823FB540C00C0671F /* font__msx.c */,
+				5B0F005E23F872AD00A1D6D1 /* Makefile */,
 			);
 			name = src;
 			path = ../src;
@@ -123,6 +131,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				5B0F006123F872AD00A1D6D1 /* bas2img.c in Sources */,
+				5B6BA56B23FB540D00C0671F /* font__msx-din.c in Sources */,
+				5B6BA56A23FB540D00C0671F /* font__msx.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

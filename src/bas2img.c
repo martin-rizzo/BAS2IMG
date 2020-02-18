@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include "font.h"
 #define VERSION   "0.1"
 #define COPYRIGHT "Copyright (c) 2020 Martin Rizzo"
 #define MIN_FILE_SIZE   (0)           /* < minimum size for loadable files (in bytes)   */
@@ -57,10 +58,34 @@ typedef enum ErrorID {
 typedef enum ExtensionMethod { OPTIONAL_EXTENSION, FORCED_EXTENSION } ExtensionMethod;
 typedef enum ImageFormat     { BMP, GIF             } ImageFormat;
 typedef enum Orientation     { HORIZONTAL, VERTICAL } Orientation;
-typedef enum Mode            { GENERATE_IMAGE, LIST_ALL_COMPUTERS, EXPORT_FONT, IMPORT_FONT } Mode;
+typedef enum Mode            { GENERATE_IMAGE, LIST_ALL_COMPUTERS, LIST_ALL_FONTS, EXPORT_FONT, IMPORT_FONT } Mode;
 
 typedef struct Error { ErrorID id; const utf8 *str; } Error;
 
+
+
+/*=================================================================================================================*/
+#pragma mark - > FONTS
+
+static const Font *theFonts[] = { &font__msx, &font__msx_din, NULL };
+
+/**
+ * Returns the information of the font that match with the provided name
+ */
+static const Font * getFont(const utf8 *name) {
+    int i=0; while ( theFonts[i]!=NULL && strcmp(theFonts[i]->name,name)!=0 ) { ++i; }
+    return theFonts[i];
+}
+
+/**
+ * Lists all available fonts
+ */
+static void listAllFonts(void) {
+    printf("Available fonts:\n");
+    int i; for (i=0; theFonts[i]; ++i) {
+        printf("    %-10s = %s\n", theFonts[i]->name, theFonts[i]->description);
+    }
+}
 
 /*=================================================================================================================*/
 #pragma mark - > HELPER FUNCTIONS
@@ -406,7 +431,7 @@ int main(int argc, char* argv[]) {
         "  OPTIONS:",
         "    -c  --computer <name>  ",
         "    -l  --list            list names of all available computers",
-        "    -L  --list-all        list names of all available computers and its variations",
+        "    -f  --list-fonts      list all available computer fonts",
         "    -b  --bmp             generate BMP image (default)",
         "    -g  --gif             generate GIF image",
         "    -H  --horizontal      use horizontal orientation (default)",
@@ -424,6 +449,7 @@ int main(int argc, char* argv[]) {
         else if ( isEqual(param,"-c","--computer"   ) ) { computerName=getNextStrParam(i,argc,argv);    }
         else if ( isEqual(param,"-l","--list"       ) ) { mode=LIST_ALL_COMPUTERS; briefListing=TRUE;   }
         else if ( isEqual(param,"-L","--list-all"   ) ) { mode=LIST_ALL_COMPUTERS; briefListing=FALSE;  }
+        else if ( isEqual(param,"-f","--list-fonts" ) ) { mode=LIST_ALL_FONTS;      }
         else if ( isEqual(param,"-b","--bmp"        ) ) { imageFormat=BMP;          }
         else if ( isEqual(param,"-g","--gif"        ) ) { imageFormat=GIF;          }
         else if ( isEqual(param,"-H","--horizontal" ) ) { orientation=HORIZONTAL;   }
@@ -444,18 +470,12 @@ int main(int argc, char* argv[]) {
         printf("%s\n"                , COPYRIGHT);
         return 0;
     }
-    else if (mode==IMPORT_FONT) {
-        createFontHeader(NULL, inputFileName, imageFormat, orientation);
-    }
-    else if (mode==EXPORT_FONT) {
-        
-        
-    }
-    else if (mode==LIST_ALL_COMPUTERS) {
-        
-    }
-    else if (mode==GENERATE_IMAGE) {
-        
+    switch (mode) {
+        case LIST_ALL_COMPUTERS: printf("list all computers operation is not implemented yet.\n"); break;
+        case LIST_ALL_FONTS    : listAllFonts(); break;
+        case IMPORT_FONT       : createFontHeader(NULL, inputFileName, imageFormat, orientation); break;
+        case EXPORT_FONT       : printf("Export font operation is not implemented yet.\n"); break;
+        case GENERATE_IMAGE    : printf("generate image operation is not implemented yet.\n"); break;
     }
     return printErrorMessage();
 }
