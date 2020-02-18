@@ -5,7 +5,7 @@
  * @copyright  Copyright (c) 2020 Martin Rizzo.
  *             This project is released under the MIT License.
  * -------------------------------------------------------------------------
- *  BAS2IMG - BASIC code listing to image converter
+ *  BAS2IMG - The "source code to image" converter for BASIC language
  * -------------------------------------------------------------------------
  *  Copyright (c) 2020 Martin Rizzo
  *
