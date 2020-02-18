@@ -2,26 +2,23 @@
 CC = cc
 RM = rm -f
 BIN_DIR  = ../bin
-DBG_DIR  = debug
-REL_DIR  = release
 
 ## files ##
-HEADERS       = font.h
-OBJS          = bas2img.o font__msx-din.o font__msx.o
-TARGET        = $(BIN_DIR)/bas2img
-TARGET_DBG    = $(BIN_DIR)/bas2img_d
+HEADERS        = font.h
+OBJECTS        = bas2img font__msx-din font__msx
+TARGET_RELEASE = $(BIN_DIR)/bas2img
+TARGET_DEBUG   = $(BIN_DIR)/bas2img_d
 
 ## compiler flags ##
-DEBUG_FLAGS   = -O0 -D_DEBUG
-RELEASE_FLAGS = -Os -DNDEBUG
-CFLAGS_ANSI   = -ansi
-CFLAGS_ERRORS = -Wall -pedantic-errors -Wno-unused-function
-CFLAGS        = $(CFLAGS_ANSI) $(CFLAGS_ERRORS)
+CONFIG_RELEASE = -Os -DNDEBUG
+CONFIG_DEBUG   = -O0 -D_DEBUG
+CFLAGS_ANSI    = -ansi
+CFLAGS_ERRORS  = -Wall -pedantic-errors -Wno-unused-function
+CFLAGS         = $(CFLAGS_ANSI) $(CFLAGS_ERRORS)
 
 
-
-OBJS_DBG = $(addprefix $(DBG_DIR)/, $(OBJS))
-OBJS_REL = $(addprefix $(REL_DIR)/, $(OBJS))
+OBJS_RELEASE = $(addsuffix _r.o, $(OBJECTS))
+OBJS_DEBUG   = $(addsuffix _d.o, $(OBJECTS))
 
 
 .PHONY: all debug release clean
@@ -33,27 +30,27 @@ all: debug
 #----------------------------------------------
 # DEBUG
 #
-debug: $(TARGET_DBG)
+debug: $(TARGET_DEBUG)
 
-$(TARGET_DBG): $(OBJS_DBG) $(HEADERS)
-	$(CC) $(DEBUG_FLAGS)  -o $@  $(OBJS_DBG)
+$(TARGET_DEBUG): $(OBJS_DEBUG) $(HEADERS)
+	$(CC) $(CONFIG_DEBUG)  -o $@  $(OBJS_DEBUG)
 
 
-$(DBG_DIR)/%.o: %.c
-	$(CC) -c $(CFLAGS) $(DEBUG_FLAGS)  -o $@  $<
+%_d.o: %.c
+	$(CC) -c $(CFLAGS) $(CONFIG_DEBUG)  -o $@  $<
 
 
 
 #-----------------------------------------------
 # RELEASE
 #
-release: $(TARGET)
+release: $(TARGET_RELEASE)
 
-$(TARGET): $(OBJS_REL) $(HEADERS)
-	$(CC) $(RELEASE_FLAGS)  -o $@  $(OBJS_REL)
+$(TARGET_RELEASE): $(OBJS_RELEASE) $(HEADERS)
+	$(CC) $(CONFIG_RELEASE)  -o $@  $(OBJS_RELEASE)
 
-$(REL_DIR)/%.o: %.c
-	$(CC) -c $(CFLAGS) $(RELEASE_FLAGS)  -o $@  $<
+%_r.o: %.c
+	$(CC) -c $(CFLAGS) $(CONFIG_RELEASE)  -o $@  $<
 
 
 
@@ -61,7 +58,7 @@ $(REL_DIR)/%.o: %.c
 # CLEAN
 #
 clean:
-	$(RM) $(TARGET) $(OBJS_REL) $(TARGET_DBG) $(OBJS_DBG)
+	$(RM) $(TARGET_RELEASE) $(OBJS_RELEASE) $(TARGET_DEBUG) $(OBJS_DEBUG)
 
 
 
