@@ -43,6 +43,7 @@ typedef struct BmpHeader {
     unsigned planes;
     unsigned bitsPerPixel;
     unsigned compression;
+    unsigned pixelDataSize;
     unsigned totalColors;
     unsigned importantColors;
     unsigned scanlineSize;

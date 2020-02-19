@@ -37,8 +37,8 @@
 #define getScanlineSize(width,bitsPerPixel) ((width)*(bitsPerPixel)+31)/32 * 4
 #define FileHeaderSize    14
 #define BmpInfoHeaderSize 40
-#define XPixelsPerMeter   72
-#define YPixelsPerMeter   72
+#define XPixelsPerMeter   2834
+#define YPixelsPerMeter   2834
 typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean */
 
 
@@ -73,10 +73,11 @@ static int fwriteBmpHeader(const BmpHeader *header, FILE *file) {
     fwriteInt32(header->pixelDataOffset, file) &&
     fwriteInt32(header->headerSize     , file) &&
     fwriteInt32(header->imageWidth     , file) &&
+    fwriteInt32(header->imageHeight    , file) &&
     fwriteInt16(header->planes         , file) &&
     fwriteInt16(header->bitsPerPixel   , file) &&
     fwriteInt32(header->compression    , file) &&
-    fwriteInt32(           0           , file) &&
+    fwriteInt32(header->pixelDataSize  , file) &&
     fwriteInt32(XPixelsPerMeter        , file) &&
     fwriteInt32(YPixelsPerMeter        , file) &&
     fwriteInt32(header->totalColors    , file) &&
@@ -104,6 +105,7 @@ int setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors) {
     header->imageHeight     = height;
     header->planes          = 1;
     header->bitsPerPixel    = bitsPerPixels;
+    header->pixelDataSize   = pixelDataSize;
     header->compression     = FALSE;
     header->totalColors     = 0;
     header->importantColors = 0;
@@ -128,7 +130,8 @@ int extractBmpHeader(BmpHeader *header, const void* data, long dataSize) {
     header->planes          = getInt16(ptr);
     header->bitsPerPixel    = getInt16(ptr);
     header->compression     = getInt32(ptr);
-    ptr+=12; /* skip imageSize, xPixelsPerMeter & yPixelsPerMeter */
+    header->pixelDataSize   = getInt32(ptr);
+    ptr+=8; /* skip xPixelsPerMeter & yPixelsPerMeter */
     header->totalColors     = getInt32(ptr);
     header->importantColors = getInt32(ptr);
     header->scanlineSize    = getScanlineSize(header->imageWidth, header->bitsPerPixel);

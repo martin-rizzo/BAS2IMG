@@ -55,9 +55,9 @@ typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean */
 /* supported errors */
 typedef enum ErrorID {
     SUCCESS=0, ERR_UNKNOWN_PARAM, ERR_FILE_NOT_FOUND, ERR_FILE_TOO_LARGE, ERR_FILE_TOO_SMALL,
-    ERR_CANNOT_CREATE_FILE, ERR_CANNOT_READ_FILE, ERR_NOT_ENOUGH_MEMORY, ERR_GIF_NOT_SUPPORTED,
-    ERR_FILE_IS_NOT_BMP, ERR_BMP_MUST_BE_128PX, ERR_BMP_MUST_BE_1BIT,
-    ERR_BMP_UNSUPPORTED_FORMAT, ERR_BMP_INVALID_FORMAT
+    ERR_CANNOT_CREATE_FILE, ERR_CANNOT_READ_FILE, ERR_CANNOT_WRITE_FILE, ERR_NOT_ENOUGH_MEMORY,
+    ERR_GIF_NOT_SUPPORTED, ERR_FILE_IS_NOT_BMP, ERR_BMP_MUST_BE_128PX, ERR_BMP_MUST_BE_1BIT,
+    ERR_BMP_UNSUPPORTED_FORMAT, ERR_BMP_INVALID_FORMAT, ERR_NONEXISTENT_FONT
 } ErrorID;
 
 typedef enum ExtensionMethod { OPTIONAL_EXTENSION, FORCED_EXTENSION } ExtensionMethod;
@@ -77,12 +77,10 @@ static const Font *theFonts[] = { &font__msx, &font__msx_din, NULL };
 /**
  * Returns the information of the font that match with the provided name
  */
-/*
-static const Font * getFont(const utf8 *name) {
+static const Font * getFontWithName(const utf8 *name) {
     int i=0; while ( theFonts[i]!=NULL && strcmp(theFonts[i]->name,name)!=0 ) { ++i; }
     return theFonts[i];
 }
-*/
 
 /**
  * Lists all available fonts
@@ -198,6 +196,7 @@ static Bool printErrorMessage(void) {
         case ERR_FILE_TOO_SMALL:     message = "file '$' is too small"; break;
         case ERR_CANNOT_CREATE_FILE: message = "file '$' cannot be created"; break;
         case ERR_CANNOT_READ_FILE:   message = "file '$' cannot be accessed"; break;
+        case ERR_CANNOT_WRITE_FILE:  message = "file '$' cannot be written"; break;
         case ERR_NOT_ENOUGH_MEMORY:  message = "not enough memory"; break;
         case ERR_GIF_NOT_SUPPORTED:  message = "GIF format isn't supported yet"; break;
         case ERR_FILE_IS_NOT_BMP:    message = "file '$' is not a BMP file"; break;
@@ -205,6 +204,7 @@ static Bool printErrorMessage(void) {
         case ERR_BMP_MUST_BE_1BIT:   message = "image in '$' must be 1 bit per pixel monochrome bitmap"; break;
         case ERR_BMP_UNSUPPORTED_FORMAT: message = "the BMP format in '$' is not supported by BAS2IMG"; break;
         case ERR_BMP_INVALID_FORMAT: message = "file '$' has a wrong BMP format or is corrupt"; break;
+        case ERR_NONEXISTENT_FONT:   message = "The font '$' does not exist. Use the '--list-fonts' option for a list of available fonts."; break;
         default:                     message = "unknown error";     break;
     }
     if (error->str)  {
@@ -223,37 +223,42 @@ static Bool printErrorMessage(void) {
 #pragma mark - > EXPORTING FONTS TO FILE
 
 Bool exportFont(const Font *font, FILE *outputFile) {
-    /*
+
     BmpHeader bmp;
     Byte colorTable[4 * FONTIMG_NUMOFCOLORS];
     Byte pixelData[(FONTIMG_WIDTH * FONTIMG_HEIGHT) / 8];
-    */
-
-    /*
     setBmpHeader(&bmp, FONTIMG_WIDTH, FONTIMG_HEIGHT, FONTIMG_NUMOFCOLORS);
-    fwriteBmp(&bmp, colorTable, sizeof(colorTable), pixelData, sizeof(pixelData), file);
-    */
+    fwriteBmp(&bmp, colorTable, sizeof(colorTable), pixelData, sizeof(pixelData), outputFile);
     return TRUE;
 }
 
 Bool exportFontWithName(const utf8 *name) {
-    const utf8 *outputFilePath, *outputFileName;
-    /* FILE *outputFile; */
+    const utf8 *outputFilePath=NULL, *outputFileName=NULL;
+    FILE *outputFile=NULL; const Font *font=NULL;
     assert( name!=NULL );
     
-    outputFileName = allocConcatenation(FONTIMG_PREFIX, name);
-    outputFilePath = allocFilePath(outputFileName, ".bmp", FORCED_EXTENSION);
-
-    DLOG(("Exporting font %s to file '%s'", name, outputFilePath));
-    /*
-    outputFile = fopen(outputFilePath, "wb");
-    exportFile(font, outputFile);
-    fclose(outputFile);
-    */
-    
+    if (isRunning()) {
+        font = getFontWithName(name);
+        if (!font) { err2(ERR_NONEXISTENT_FONT,name); }
+    }
+    if (isRunning()) {
+        outputFileName = allocConcatenation(FONTIMG_PREFIX, name);
+        outputFilePath = allocFilePath(outputFileName, ".bmp", FORCED_EXTENSION);
+        if (!outputFileName || !outputFileName) { err(ERR_NOT_ENOUGH_MEMORY); }
+    }
+    if (isRunning()) {
+        outputFile = fopen(outputFilePath, "wb");
+        if (!outputFile) { err2(ERR_CANNOT_CREATE_FILE,outputFilePath); }
+    }
+    if (isRunning()) {
+        printf("Exporting font %s to file '%s'", name, outputFilePath);
+        exportFont(font, outputFile);
+    }
+    /* clean up and return */
+    if (outputFile) { fclose(outputFile); }
     free((void*)outputFilePath);
     free((void*)outputFileName);
-    return TRUE;
+    return isRunning();
 }
 
 /*=================================================================================================================*/

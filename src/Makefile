@@ -4,7 +4,7 @@ RM = rm -f
 BIN_DIR  = ../bin
 
 ## files ##
-HEADERS        = font.h
+HEADERS        = font.h bmp.h gif.h
 OBJECTS        = bas2img bmp gif font__msx font__msx-din
 TARGET_RELEASE = $(BIN_DIR)/bas2img
 TARGET_DEBUG   = $(BIN_DIR)/bas2img_d
