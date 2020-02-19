@@ -43,8 +43,11 @@
 #define DIR_SEPARATOR1 '\\'
 #define DIR_SEPARATOR2 '/'
 #define EXT_SEPARATOR   '.'
-#define isEqual(param,name1,name2)   (strcmp(param,name1)==0 || strcmp(param,name2)==0)
-#define getNextStrParam(i,argc,argv) ((i)<((argc)-1) ? argv[++i] : "")
+#define FONTIMG_WIDTH       128  /* < the width in pixels of font images  */
+#define FONTIMG_HEIGHT      128  /* < the height in pixels of font images */
+#define FONTIMG_NUMOFCOLORS 2    /* < the number of colors of font images */
+#define FONTIMG_PREFIX      "font__"
+#define isOption(param,opname1,opname2)   (strcmp(param,opname1)==0 || strcmp(param,opname2)==0)
 typedef unsigned char Byte;               /* < Byte (size=8bits)                         */
 typedef char utf8;                        /* < unicode variable width character encoding */
 typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean */
@@ -219,6 +222,39 @@ static Bool printErrorMessage(void) {
 /*=================================================================================================================*/
 #pragma mark - > EXPORTING FONTS TO FILE
 
+Bool exportFont(const Font *font, FILE *outputFile) {
+    /*
+    BmpHeader bmp;
+    Byte colorTable[4 * FONTIMG_NUMOFCOLORS];
+    Byte pixelData[(FONTIMG_WIDTH * FONTIMG_HEIGHT) / 8];
+    */
+
+    /*
+    setBmpHeader(&bmp, FONTIMG_WIDTH, FONTIMG_HEIGHT, FONTIMG_NUMOFCOLORS);
+    fwriteBmp(&bmp, colorTable, sizeof(colorTable), pixelData, sizeof(pixelData), file);
+    */
+    return TRUE;
+}
+
+Bool exportFontWithName(const utf8 *name) {
+    const utf8 *outputFilePath, *outputFileName;
+    /* FILE *outputFile; */
+    assert( name!=NULL );
+    
+    outputFileName = allocConcatenation(FONTIMG_PREFIX, name);
+    outputFilePath = allocFilePath(outputFileName, ".bmp", FORCED_EXTENSION);
+
+    DLOG(("Exporting font %s to file '%s'", name, outputFilePath));
+    /*
+    outputFile = fopen(outputFilePath, "wb");
+    exportFile(font, outputFile);
+    fclose(outputFile);
+    */
+    
+    free((void*)outputFilePath);
+    free((void*)outputFileName);
+    return TRUE;
+}
 
 /*=================================================================================================================*/
 #pragma mark - > IMPORTING FONT INTO C-ARRAY
@@ -416,18 +452,18 @@ int main(int argc, char* argv[]) {
     /* process all parameters */
     for (i=1; i<argc; ++i) { param=argv[i];
         if      ( param[0]!='-' ) { inputFileName=param; }
-        else if ( isEqual(param,"-c","--computer"   ) ) { computerName=getNextStrParam(i,argc,argv);    }
-        else if ( isEqual(param,"-l","--list"       ) ) { mode=LIST_ALL_COMPUTERS; briefListing=TRUE;   }
-        else if ( isEqual(param,"-L","--list-all"   ) ) { mode=LIST_ALL_COMPUTERS; briefListing=FALSE;  }
-        else if ( isEqual(param,"-f","--list-fonts" ) ) { mode=LIST_ALL_FONTS;      }
-        else if ( isEqual(param,"-b","--bmp"        ) ) { imageFormat=BMP;          }
-        else if ( isEqual(param,"-g","--gif"        ) ) { imageFormat=GIF;          }
-        else if ( isEqual(param,"-H","--horizontal" ) ) { orientation=HORIZONTAL;   }
-        else if ( isEqual(param,"-V","--vertical"   ) ) { orientation=VERTICAL;     }
-        else if ( isEqual(param,"-X","--export-font") ) { mode=EXPORT_FONT;         }
-        else if ( isEqual(param,"-@","--import-font") ) { mode=IMPORT_FONT;         }
-        else if ( isEqual(param,"-h","--help"       ) ) { printHelpAndExit=TRUE;    }
-        else if ( isEqual(param,"-v","--version"    ) ) { printVersionAndExit=TRUE; }
+        else if ( isOption(param,"-c","--computer"   ) ) { computerName=getOptionCfg(&i,argc,argv);    }
+        else if ( isOption(param,"-l","--list"       ) ) { mode=LIST_ALL_COMPUTERS; briefListing=TRUE;   }
+        else if ( isOption(param,"-L","--list-all"   ) ) { mode=LIST_ALL_COMPUTERS; briefListing=FALSE;  }
+        else if ( isOption(param,"-f","--list-fonts" ) ) { mode=LIST_ALL_FONTS;      }
+        else if ( isOption(param,"-b","--bmp"        ) ) { imageFormat=BMP;          }
+        else if ( isOption(param,"-g","--gif"        ) ) { imageFormat=GIF;          }
+        else if ( isOption(param,"-H","--horizontal" ) ) { orientation=HORIZONTAL;   }
+        else if ( isOption(param,"-V","--vertical"   ) ) { orientation=VERTICAL;     }
+        else if ( isOption(param,"-X","--export-font") ) { mode=EXPORT_FONT; fontName=getOptionCfg(&i,argc,argv); }
+        else if ( isOption(param,"-@","--import-font") ) { mode=IMPORT_FONT; fontName=getOptionCfg(&i,argc,argv); }
+        else if ( isOption(param,"-h","--help"       ) ) { printHelpAndExit=TRUE;    }
+        else if ( isOption(param,"-v","--version"    ) ) { printVersionAndExit=TRUE; }
         else    { err2(ERR_UNKNOWN_PARAM,param); printErrorMessage(); return 0; }
     }
     
@@ -441,11 +477,28 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     switch (mode) {
-        case LIST_ALL_COMPUTERS: printf("list all computers operation is not implemented yet.\n"); break;
-        case LIST_ALL_FONTS    : listAllFonts(); break;
-        case IMPORT_FONT       : createFontHeader(NULL, inputFileName, imageFormat, orientation); break;
-        case EXPORT_FONT       : printf("Export font operation is not implemented yet.\n"); break;
-        case GENERATE_IMAGE    : printf("generate image operation is not implemented yet.\n"); break;
+            
+        case LIST_ALL_COMPUTERS:
+            printf("list all computers operation is not implemented yet.\n");
+            break;
+            
+        case LIST_ALL_FONTS:
+            listAllFonts();
+            break;
+            
+        case IMPORT_FONT:
+            fontName = firstValid( fontName, inputFileName, NULL );
+            writeCArrayFromImage(NULL, fontName, imageFormat, orientation);
+            break;
+            
+        case EXPORT_FONT:
+            fontName = firstValid( fontName, inputFileName, NULL );
+            exportFontWithName( fontName );
+            break;
+            
+        case GENERATE_IMAGE:
+            printf("generate image operation is not implemented yet.\n");
+            break;
     }
     return printErrorMessage();
 }
