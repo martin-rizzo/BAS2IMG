@@ -118,6 +118,27 @@ static long getFileSize(FILE *file) {
     return fileSize;
 }
 
+static const utf8 * getOptionCfg(int *inout_index, int argc, char* argv[]) {
+    const int nexti = (*inout_index)+1; const utf8 *nextparam = "";
+    if ( nexti<argc && argv[nexti][0]!='-' ) { (*inout_index)=nexti; nextparam=argv[nexti]; }
+    return nextparam;
+}
+
+static const utf8 * firstValid(const utf8 *name1, const utf8 *name2, const utf8 *name3) {
+    if (name1!=NULL && name1[0]!='\0') { return name1; }
+    if (name2!=NULL && name2[0]!='\0') { return name2; }
+    if (name3!=NULL && name3[0]!='\0') { return name3; }
+    return "";
+}
+
+static const utf8 * allocConcatenation(const utf8 *firstString, const utf8 *secondString) {
+    utf8 *string;
+    assert( firstString!=NULL && secondString!=NULL );
+    string = malloc( strlen(firstString)+strlen(secondString)+1 );
+    strcpy(string,firstString); strcat(string,secondString);
+    return string;
+}
+
 /**
  *
  */
