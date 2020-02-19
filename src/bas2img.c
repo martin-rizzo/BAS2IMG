@@ -5,7 +5,7 @@
  * @copyright  Copyright (c) 2020 Martin Rizzo.
  *             This project is released under the MIT License.
  * -------------------------------------------------------------------------
- *  BAS2IMG -
+ *  BAS2IMG - The "source code to image" converter for BASIC language
  * -------------------------------------------------------------------------
  *  Copyright (c) 2020 Martin Rizzo
  *
@@ -121,7 +121,6 @@ static long getFileSize(FILE *file) {
 /**
  *
  */
-
 static const utf8* allocFilePath(const utf8* originalFilePath, const utf8* newExtension, ExtensionMethod method) {
     const utf8 *fileName, *sour; utf8 *dest, *oldExtension=NULL;
     assert( originalFilePath!=NULL && newExtension!=NULL );
@@ -249,6 +248,9 @@ Bool writeCArrayFromImageBuffer(FILE       *outputFile,
 
 /**
  * Writes the C code representing an array containing the font image stored in a BMP file
+ *
+ * The font image must be a 2-colors BMP file, it must be of size 128x128 pixels
+ * and it must contain all the characters arranged in 16 columns and 16 rows
  * @param outputFile     The file where the generated C code will be written
  * @param arrayName      The name of the C array
  * @param imageFile      The file with the image encoded in BMP format
@@ -307,17 +309,19 @@ Bool writeCArrayFromBitmapFile(FILE       *outputFile,
 }
 
 /**
- * Creates a font header (.h) containing the C code to recreate the font image
+ * Creates a C code representing an array containing the font image
  *
- * The font image must be a 2-colors BMP file, it must be of size 128x128 pixels
- * and it must contain all the characters arranged in 16 columns and 16 rows
- * @param headerFilePath  The full path to the new header (.h) to create (can be NULL)
- * @param imageFilePath   The full path to the input image
- * @param imageFormat     The format of the input image (only BMP format is supported)
- * @param orientation     The order of characters in the image (vertical slices, horizontal slices)
+ * @param outputFilePath The path to the file where the generated C code will be written (NULL = use image name)
+ * @param imageFilePath  The path to the input image
+ * @param imageFormat    The format of the input image (only BMP format is supported)
+ * @param orientation    The order of characters in the image (vertical slices, horizontal slices)
  */
-Bool createFontHeader(const utf8 *headerFilePath, const utf8 *imageFilePath, ImageFormat imageFormat, Orientation orientation) {
-    FILE *imageFile=NULL, *headerFile=NULL; long imageFileSize=0;
+Bool writeCArrayFromImage(const utf8  *outputFilePath,
+                          const utf8  *imageFilePath,
+                          ImageFormat  imageFormat,
+                          Orientation  orientation)
+{
+    FILE *outputFile=NULL, *imageFile=NULL; long imageFileSize=0;
     assert( imageFilePath!=NULL );
     assert( imageFormat==BMP || imageFormat==GIF );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
@@ -326,8 +330,8 @@ Bool createFontHeader(const utf8 *headerFilePath, const utf8 *imageFilePath, Ima
     
     /* add extensions (when appropiate) */
     imageFilePath = allocFilePath(imageFilePath, ".bmp", OPTIONAL_EXTENSION);
-    if (headerFilePath) { headerFilePath = allocFilePath(headerFilePath,".h",OPTIONAL_EXTENSION); }
-    else                { headerFilePath = allocFilePath(imageFilePath ,".h",FORCED_EXTENSION  ); }
+    if (outputFilePath) { outputFilePath = allocFilePath(outputFilePath,".c",OPTIONAL_EXTENSION); }
+    else                { outputFilePath = allocFilePath(imageFilePath ,".c",FORCED_EXTENSION  ); }
     
     if (isRunning()) { /* 1) open image file for reading */
         imageFile = fopen(imageFilePath,"rb");
@@ -339,24 +343,21 @@ Bool createFontHeader(const utf8 *headerFilePath, const utf8 *imageFilePath, Ima
         if (imageFileSize>MAX_FILE_SIZE) { err2(ERR_FILE_TOO_LARGE,imageFilePath); }
     }
     if (isRunning()) { /* 3) open header file for writing */
-        headerFile = fopen(headerFilePath,"w");
-        if (!headerFile) { err2(ERR_CANNOT_CREATE_FILE,headerFilePath); }
+        outputFile = fopen(outputFilePath,"w");
+        if (!outputFile) { err2(ERR_CANNOT_CREATE_FILE,outputFilePath); }
     }
     if (isRunning()) { /* 4) proceed! */
-        printf("Creating font header %s\n", headerFilePath);
-        writeCArrayFromBitmapFile(headerFile,"msx",imageFile,imageFileSize,imageFilePath,orientation);
+        printf("Creating font source code in '%s'\n", outputFilePath);
+        writeCArrayFromBitmapFile(outputFile,"msx",imageFile,imageFileSize,imageFilePath,orientation);
     }
     /* clean up and return */
     if (imageFile     ) { fclose(imageFile ); imageFile =NULL; }
-    if (headerFile    ) { fclose(headerFile); headerFile=NULL; }
+    if (outputFile    ) { fclose(outputFile); outputFile=NULL; }
     if (imageFilePath ) { free((void*)imageFilePath ); imageFilePath =NULL; }
-    if (headerFilePath) { free((void*)headerFilePath); headerFilePath=NULL; }
+    if (outputFilePath) { free((void*)outputFilePath); outputFilePath=NULL; }
     return isRunning();
 }
 
-Bool exportFont(const utf8 *computerName) {
-    return TRUE;
-}
 
 /*=================================================================================================================*/
 #pragma mark - > MAIN
@@ -372,6 +373,7 @@ int main(int argc, char* argv[]) {
     Orientation orientation    = HORIZONTAL;
     const utf8 *inputFileName  = NULL;
     const utf8 *computerName   = NULL;
+    const utf8 *fontName       = NULL;
     const utf8 *param;
     const utf8 *help[] = {
         "USAGE: bas2img [options] file.bas","",
