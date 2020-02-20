@@ -48,29 +48,6 @@
 typedef enum Mode { GENERATE_IMAGE, LIST_ALL_COMPUTERS, LIST_ALL_FONTS, EXPORT_FONT, IMPORT_FONT } Mode;
 
 
-/*=================================================================================================================*/
-#pragma mark - > FONTS
-
-static const Font *theFonts[] = { &font__msx, &font__msx_din, NULL };
-
-/**
- * Returns the information of the font that match with the provided name
- */
-static const Font * getFontWithName(const utf8 *name) {
-    int i=0; while ( theFonts[i]!=NULL && strcmp(theFonts[i]->name,name)!=0 ) { ++i; }
-    return theFonts[i];
-}
-
-/**
- * Lists all available fonts
- */
-static void listAllFonts(void) {
-    int i;
-    printf("Available fonts:\n"); for (i=0; theFonts[i]; ++i) {
-        printf("    %-10s = %s\n", theFonts[i]->name, theFonts[i]->description);
-    }
-}
-
 
 /*=================================================================================================================*/
 #pragma mark - > HELPER FUNCTIONS

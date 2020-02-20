@@ -31,6 +31,7 @@
  */
 #ifndef bas2img_font_h
 #define bas2img_font_h
+#include "bas2img.h"
 
 
 typedef struct Font {
@@ -39,9 +40,15 @@ typedef struct Font {
     unsigned char data[2048];
 } Font;
 
+/**
+ * Returns the information of the font that match with the provided name
+ */
+const Font * getFontWithName(const utf8 *name);
 
-extern const Font font__msx;
-extern const Font font__msx_din;
+/**
+ * Lists all available fonts
+ */
+void listAllFonts(void);
 
 
 

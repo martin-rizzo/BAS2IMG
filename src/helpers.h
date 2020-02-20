@@ -33,6 +33,8 @@
 #define bas2img_helpers_h
 
 
+typedef enum ExtensionMethod { OPTIONAL_EXTENSION, FORCED_EXTENSION } ExtensionMethod;
+
 /**
  * Replaces the sign '$' contained in message with the text provided in 'str'
  * @param buffer   The buffer where the composed string will be written

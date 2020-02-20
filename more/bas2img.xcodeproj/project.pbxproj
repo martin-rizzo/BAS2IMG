@@ -16,6 +16,7 @@
 		5B77D85223FE0F0F007C7085 /* helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D85123FE0F0F007C7085 /* helpers.c */; };
 		5B77D85523FE1374007C7085 /* error.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D85423FE1374007C7085 /* error.c */; };
 		5B77D85823FE15FF007C7085 /* import.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D85623FE15FF007C7085 /* import.c */; };
+		5B77D85A23FE1884007C7085 /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D85923FE1884007C7085 /* font.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -49,6 +50,7 @@
 		5B77D85423FE1374007C7085 /* error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = error.c; sourceTree = "<group>"; };
 		5B77D85623FE15FF007C7085 /* import.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = import.c; sourceTree = "<group>"; };
 		5B77D85723FE15FF007C7085 /* import.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = import.h; sourceTree = "<group>"; };
+		5B77D85923FE1884007C7085 /* font.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = font.c; sourceTree = "<group>"; };
 		5BD0E30623F871850013F982 /* bas2img */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bas2img; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -77,6 +79,7 @@
 				5B77D84C23FE0C7B007C7085 /* export.h */,
 				5B77D84D23FE0C7B007C7085 /* export.c */,
 				5B6BA56C23FB541D00C0671F /* font.h */,
+				5B77D85923FE1884007C7085 /* font.c */,
 				5B6BA56923FB540D00C0671F /* font__msx-din.c */,
 				5B6BA56823FB540C00C0671F /* font__msx.c */,
 				5B23CDA923FC3FD100C628E5 /* bmp.h */,
@@ -162,6 +165,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5B77D85A23FE1884007C7085 /* font.c in Sources */,
 				5B77D85823FE15FF007C7085 /* import.c in Sources */,
 				5B77D85223FE0F0F007C7085 /* helpers.c in Sources */,
 				5B0F006123F872AD00A1D6D1 /* bas2img.c in Sources */,

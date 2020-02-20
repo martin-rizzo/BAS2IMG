@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "bas2img.h"
+#include "helpers.h"
 
 /**
  * Replaces the sign '$' contained in message with the text provided in 'str'

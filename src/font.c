@@ -1,6 +1,6 @@
 /**
- * @file       bas2img.h
- * @date       Feb 15, 2020
+ * @file       font.c
+ * @date       Feb 17, 2020
  * @author     Martin Rizzo | <martinrizzo@gmail.com>
  * @copyright  Copyright (c) 2020 Martin Rizzo.
  *             This project is released under the MIT License.
@@ -29,27 +29,33 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#ifndef bas2img_h
-#define bas2img_h
+#include <stdlib.h>
+#include <stdio.h>
+#include "bas2img.h"
+#include "string.h"
+#include "font.h"
 
 
-#define MIN_FILE_SIZE       (0)           /* < minimum size for loadable files (in bytes)       */
-#define MAX_FILE_SIZE       (1024L*1024L) /* < maximum size for loadable files (in bytes)       */
-#define DIR_SEPARATOR1      '\\'          /* < char used to separate directories in a path      */
-#define DIR_SEPARATOR2      '/'           /* < char used to separate directories in a path      */
-#define EXT_SEPARATOR       '.'           /* < char used as file extension separator            */
-#define CHAR_SIZE           8             /* < the width & height of each character (in pixels) */
-#define FONTIMG_SIZE        128           /* < the width & height of font images (in pixels)    */
-#define FONTIMG_NUMOFCOLORS 2             /* < the number of colors of font images              */
-#define FONTIMG_PREFIX      "font__"      /* < prefix used when exporting fonts                 */
-#define isOption(param,opname1,opname2)   (strcmp(param,opname1)==0 || strcmp(param,opname2)==0)
-typedef unsigned char Byte;               /* < Byte (size=8bits)                                */
-typedef char utf8;                        /* < unicode variable width character encoding        */
-typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean                                          */
-
-typedef enum ImageFormat     { BMP, GIF             } ImageFormat;
-typedef enum Orientation     { HORIZONTAL, VERTICAL } Orientation;
+extern const Font font__msx;
+extern const Font font__msx_din;
 
 
+static const Font *theFonts[] = { &font__msx, &font__msx_din, NULL };
 
-#endif /* bas2img_h */
+/**
+ * Returns the information of the font that match with the provided name
+ */
+const Font * getFontWithName(const utf8 *name) {
+    int i=0; while ( theFonts[i]!=NULL && strcmp(theFonts[i]->name,name)!=0 ) { ++i; }
+    return theFonts[i];
+}
+
+/**
+ * Lists all available fonts
+ */
+void listAllFonts(void) {
+    int i;
+    printf("Available fonts:\n"); for (i=0; theFonts[i]; ++i) {
+        printf("    %-10s = %s\n", theFonts[i]->name, theFonts[i]->description);
+    }
+}
