@@ -39,7 +39,6 @@
 #define BmpInfoHeaderSize 40
 #define XPixelsPerMeter   2834
 #define YPixelsPerMeter   2834
-typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean */
 
 
 /*=================================================================================================================*/
@@ -88,7 +87,7 @@ static int fwriteBmpHeader(const BmpHeader *header, FILE *file) {
 /*=================================================================================================================*/
 #pragma mark - > EXTERN FUNCTIONS
 
-int setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors) {
+Bool setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors) {
     const int bitsPerPixels  = numberOfColors==2 ? 1 : numberOfColors==16 ? 4 : 8;
     const int scanlineSize   = getScanlineSize(width, bitsPerPixels);
     const int colorTableSize = 4 * numberOfColors;
@@ -113,7 +112,7 @@ int setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors) {
     return TRUE;
 }
 
-int extractBmpHeader(BmpHeader *header, const void* data, long dataSize) {
+Bool extractBmpHeader(BmpHeader *header, const void* data, long dataSize) {
     const char *ptr;
     assert( header!=NULL && data!=NULL && dataSize>0 );
     
@@ -135,29 +134,14 @@ int extractBmpHeader(BmpHeader *header, const void* data, long dataSize) {
     header->totalColors     = getInt32(ptr);
     header->importantColors = getInt32(ptr);
     header->scanlineSize    = getScanlineSize(header->imageWidth, header->bitsPerPixel);
-    /*
-    DLOG(("fileType: %d", header->fileType));
-    DLOG(("fileSize: %d", header->fileSize));
-    DLOG(("pixelDataOffset: %d", header->pixelDataOffset));
-    DLOG(("headerSize: %d", header->headerSize));
-    DLOG(("imageWidth: %d", header->imageWidth));
-    DLOG(("imageHeight: %d", header->imageHeight));
-    DLOG(("planes: %d", header->planes));
-    DLOG(("bitsPerPixel: %d", header->bitsPerPixel));
-    DLOG(("compression: %d", header->compression));
-    DLOG(("totalColors: %d", header->totalColors));
-    DLOG(("importantColors: %d", header->importantColors));
-    DLOG(("scanlineSize: %d", header->scanlineSize));
-    */
     return TRUE;
 }
 
 
-
-int fwriteBmp(const BmpHeader *header,
-              const void      *colorTable, int colorTableSize,
-              const void      *pixelData , int pixelDataSize,
-              FILE *file) {
+Bool fwriteBmp(const BmpHeader *header,
+               const void      *colorTable, int colorTableSize,
+               const void      *pixelData , int pixelDataSize,
+               FILE *file) {
     
     return
     fwriteBmpHeader(header, file)                &&

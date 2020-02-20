@@ -33,9 +33,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "bas2img.h"
-#include "helpers.h"
 #include "error.h"
+#include "helpers.h"
 
 
 Error theError = { SUCCESS, NULL };

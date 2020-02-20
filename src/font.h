@@ -31,7 +31,7 @@
  */
 #ifndef bas2img_font_h
 #define bas2img_font_h
-#include "bas2img.h"
+#include "types.h"
 
 
 typedef struct Font {

@@ -31,8 +31,7 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
-#include "bas2img.h"
-#include "string.h"
+#include <string.h>
 #include "font.h"
 
 

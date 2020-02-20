@@ -33,8 +33,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "bas2img.h"
 #include "helpers.h"
+#define DIR_SEPARATOR1  '\\'  /* < char used to separate directories in a path      */
+#define DIR_SEPARATOR2  '/'   /* < char used to separate directories in a path      */
+#define EXT_SEPARATOR   '.'   /* < char used as file extension separator            */
 
 /**
  * Replaces the sign '$' contained in message with the text provided in 'str'

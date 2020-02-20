@@ -31,6 +31,8 @@
  */
 #ifndef bas2img_error_h
 #define bas2img_error_h
+#include "types.h"
+
 
 /* supported errors */
 typedef enum ErrorID {

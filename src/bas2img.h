@@ -35,20 +35,11 @@
 
 #define MIN_FILE_SIZE       (0)           /* < minimum size for loadable files (in bytes)       */
 #define MAX_FILE_SIZE       (1024L*1024L) /* < maximum size for loadable files (in bytes)       */
-#define DIR_SEPARATOR1      '\\'          /* < char used to separate directories in a path      */
-#define DIR_SEPARATOR2      '/'           /* < char used to separate directories in a path      */
-#define EXT_SEPARATOR       '.'           /* < char used as file extension separator            */
 #define CHAR_SIZE           8             /* < the width & height of each character (in pixels) */
 #define FONTIMG_SIZE        128           /* < the width & height of font images (in pixels)    */
 #define FONTIMG_NUMOFCOLORS 2             /* < the number of colors of font images              */
 #define FONTIMG_PREFIX      "font__"      /* < prefix used when exporting fonts                 */
 #define isOption(param,opname1,opname2)   (strcmp(param,opname1)==0 || strcmp(param,opname2)==0)
-typedef unsigned char Byte;               /* < Byte (size=8bits)                                */
-typedef char utf8;                        /* < unicode variable width character encoding        */
-typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean                                          */
-
-typedef enum ImageFormat     { BMP, GIF             } ImageFormat;
-typedef enum Orientation     { HORIZONTAL, VERTICAL } Orientation;
 
 
 

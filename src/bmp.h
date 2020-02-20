@@ -32,6 +32,7 @@
 #ifndef bas2img_bmp_h
 #define bas2img_bmp_h
 #include <stdio.h>
+#include "types.h"
 
 typedef struct BmpHeader {
     unsigned fileType;
@@ -50,13 +51,13 @@ typedef struct BmpHeader {
 } BmpHeader;
 
 
-int setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors);
+Bool setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors);
 
-int extractBmpHeader(BmpHeader *header, const void* data, long dataSize);
+Bool extractBmpHeader(BmpHeader *header, const void* data, long dataSize);
 
-int fwriteBmp(const BmpHeader *header,
-              const void      *colorTable, int colorTableSize,
-              const void      *pixelData , int pixelDataSize,
-              FILE *file);
+Bool fwriteBmp(const BmpHeader *header,
+               const void      *colorTable, int colorTableSize,
+               const void      *pixelData , int pixelDataSize,
+               FILE *file);
 
 #endif /* bas2img_bmp_h */
