@@ -29,23 +29,20 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "font.h"
+#include "font__msx.h"
+#include "font__msx-din.h"
 
+static const Font *theFonts[] = { &msx, &msx_din, 0 };
 
-extern const Font font__msx;
-extern const Font font__msx_din;
-
-
-static const Font *theFonts[] = { &font__msx, &font__msx_din, NULL };
 
 /**
  * Returns the information of the font that match with the provided name
  */
-const Font * getFontWithName(const utf8 *name) {
-    int i=0; while ( theFonts[i]!=NULL && strcmp(theFonts[i]->name,name)!=0 ) { ++i; }
+const Font * getFont(const utf8 *name) {
+    int i=0; while ( theFonts[i] && strcmp(theFonts[i]->name,name)!=0 ) { ++i; }
     return theFonts[i];
 }
 

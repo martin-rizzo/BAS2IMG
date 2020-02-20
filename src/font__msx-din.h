@@ -1,39 +1,7 @@
-/**
- * @file       font__msx.c
- * @date       Feb 17, 2020
- * @author     Martin Rizzo | <martinrizzo@gmail.com>
- * @copyright  Copyright (c) 2020 Martin Rizzo.
- *             This project is released under the MIT License.
- * -------------------------------------------------------------------------
- *  BAS2IMG - The "source code to image" converter for BASIC language
- * -------------------------------------------------------------------------
- *  Copyright (c) 2020 Martin Rizzo
- *
- *  Permission is hereby granted, free of charge, to any person obtaining
- *  a copy of this software and associated documentation files (the
- *  "Software"), to deal in the Software without restriction, including
- *  without limitation the rights to use, copy, modify, merge, publish,
- *  distribute, sublicense, and/or sell copies of the Software, and to
- *  permit persons to whom the Software is furnished to do so, subject to
- *  the following conditions:
- *
- *  The above copyright notice and this permission notice shall be
- *  included in all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- *  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- *  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- *  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * -------------------------------------------------------------------------
- */
-#include "font.h"
 
-/** MSX default font */
-const Font font__msx = {
-    "msx", "MSX", {
+/** MSX German DIN font, identical to default font but has a dotted zero */
+static const Font msx_din = {
+    "msx-din", "MSX German DIN", {
         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0x3c,0x42,0xa5,0x81,0xa5,0x99,0x42,0x3c,
         0x3c,0x7e,0xdb,0xff,0xff,0xdb,0x66,0x3c, 0x6c,0xfe,0xfe,0xfe,0x7c,0x38,0x10,0x00,
         0x10,0x38,0x7c,0xfe,0x7c,0x38,0x10,0x00, 0x10,0x38,0x54,0xfe,0x54,0x10,0x38,0x00,

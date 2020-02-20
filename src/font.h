@@ -43,7 +43,7 @@ typedef struct Font {
 /**
  * Returns the information of the font that match with the provided name
  */
-const Font * getFontWithName(const utf8 *name);
+const Font * getFont(const utf8 *name);
 
 /**
  * Lists all available fonts

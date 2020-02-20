@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
             
         case EXPORT_FONT:
             fontName = firstValid( fontName, inputFileName, NULL );
-            font     = getFontWithName(fontName);
+            font     = getFont(fontName);
             if (!font) { return err2(ERR_NONEXISTENT_FONT,fontName); }
             else       { exportFont(font,orientation);               }
             break;
