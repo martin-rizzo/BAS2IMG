@@ -38,26 +38,27 @@
 #include "gif.h"
 #define VERSION   "0.1"
 #define COPYRIGHT "Copyright (c) 2020 Martin Rizzo"
-#define MIN_FILE_SIZE   (0)           /* < minimum size for loadable files (in bytes)   */
-#define MAX_FILE_SIZE   (1024L*1024L) /* < maximum size for loadable files (in bytes)   */
-#define DIR_SEPARATOR1 '\\'
-#define DIR_SEPARATOR2 '/'
-#define EXT_SEPARATOR   '.'
-#define FONTIMG_WIDTH       128  /* < the width in pixels of font images  */
-#define FONTIMG_HEIGHT      128  /* < the height in pixels of font images */
-#define FONTIMG_NUMOFCOLORS 2    /* < the number of colors of font images */
-#define FONTIMG_PREFIX      "font__"
+#define MIN_FILE_SIZE       (0)           /* < minimum size for loadable files (in bytes)       */
+#define MAX_FILE_SIZE       (1024L*1024L) /* < maximum size for loadable files (in bytes)       */
+#define DIR_SEPARATOR1      '\\'          /* < char used to separate directories in a path      */
+#define DIR_SEPARATOR2      '/'           /* < char used to separate directories in a path      */
+#define EXT_SEPARATOR       '.'           /* < char used as file extension separator            */
+#define CHAR_SIZE           8             /* < the width & height of each character (in pixels) */
+#define FONTIMG_SIZE        128           /* < the width & height of font images (in pixels)    */
+#define FONTIMG_NUMOFCOLORS 2             /* < the number of colors of font images              */
+#define FONTIMG_PREFIX      "font__"      /* < prefix used when exporting fonts                 */
 #define isOption(param,opname1,opname2)   (strcmp(param,opname1)==0 || strcmp(param,opname2)==0)
-typedef unsigned char Byte;               /* < Byte (size=8bits)                         */
-typedef char utf8;                        /* < unicode variable width character encoding */
-typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean */
+typedef unsigned char Byte;               /* < Byte (size=8bits)                                */
+typedef char utf8;                        /* < unicode variable width character encoding        */
+typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean                                          */
 
 /* supported errors */
 typedef enum ErrorID {
     SUCCESS=0, ERR_UNKNOWN_PARAM, ERR_FILE_NOT_FOUND, ERR_FILE_TOO_LARGE, ERR_FILE_TOO_SMALL,
     ERR_CANNOT_CREATE_FILE, ERR_CANNOT_READ_FILE, ERR_CANNOT_WRITE_FILE, ERR_NOT_ENOUGH_MEMORY,
     ERR_GIF_NOT_SUPPORTED, ERR_FILE_IS_NOT_BMP, ERR_BMP_MUST_BE_128PX, ERR_BMP_MUST_BE_1BIT,
-    ERR_BMP_UNSUPPORTED_FORMAT, ERR_BMP_INVALID_FORMAT, ERR_NONEXISTENT_FONT
+    ERR_BMP_UNSUPPORTED_FORMAT, ERR_BMP_INVALID_FORMAT, ERR_NONEXISTENT_FONT,
+    ERR_INTERNAL_ERROR
 } ErrorID;
 
 typedef enum ExtensionMethod { OPTIONAL_EXTENSION, FORCED_EXTENSION } ExtensionMethod;
@@ -205,7 +206,8 @@ static Bool printErrorMessage(void) {
         case ERR_BMP_UNSUPPORTED_FORMAT: message = "the BMP format in '$' is not supported by BAS2IMG"; break;
         case ERR_BMP_INVALID_FORMAT: message = "file '$' has a wrong BMP format or is corrupt"; break;
         case ERR_NONEXISTENT_FONT:   message = "The font '$' does not exist. Use the '--list-fonts' option for a list of available fonts."; break;
-        default:                     message = "unknown error";     break;
+        case ERR_INTERNAL_ERROR:     message = "Internal error (?)"; break;
+        default:                     message = "unknown error"; break;
     }
     if (error->str)  {
         buffer  = malloc(strlen(message)+strlen(error->str)+1);
@@ -220,29 +222,77 @@ static Bool printErrorMessage(void) {
 
 
 /*=================================================================================================================*/
-#pragma mark - > EXPORTING FONTS TO FILE
+#pragma mark - > EXPORTING FONTS TO IMAGE FILE
 
-Bool exportFont(const Font *font, FILE *outputFile) {
 
-    BmpHeader bmp;
-    Byte colorTable[4 * FONTIMG_NUMOFCOLORS];
-    Byte pixelData[(FONTIMG_WIDTH * FONTIMG_HEIGHT) / 8];
-    setBmpHeader(&bmp, FONTIMG_WIDTH, FONTIMG_HEIGHT, FONTIMG_NUMOFCOLORS);
-    fwriteBmp(&bmp, colorTable, sizeof(colorTable), pixelData, sizeof(pixelData), outputFile);
-    return TRUE;
+void exportFontToImageBuffer(Byte*       buffer,
+                             int         bufferSize,
+                             int         scanlineSize,
+                             Orientation orientation,
+                             const Font  *font)
+{
+    Bool upsideDown = FALSE;
+    const Byte *fontdata = font->data;
+    int x,y,col,row,segment,line,charIdx;
+    assert( bufferSize>=(FONTIMG_SIZE*FONTIMG_SIZE)/8 );
+    
+    /* handle "upside-down" images */
+    if (scanlineSize<0) { scanlineSize=-scanlineSize; upsideDown=TRUE; }
+    /* write one by one all of 256 characters */
+    charIdx=0; for (y=0; y<(FONTIMG_SIZE/CHAR_SIZE); ++y) {
+        for (x=0; x<(FONTIMG_SIZE/CHAR_SIZE); ++x,++charIdx) {
+            assert( charIdx<=255 );
+            col = (orientation==HORIZONTAL ? x : y);
+            row = (orientation==HORIZONTAL ? y : x);
+            for (segment=0; segment<CHAR_SIZE; ++segment) {
+                line = row*CHAR_SIZE+segment; if (upsideDown) { line = (FONTIMG_SIZE-1)-line; }
+                buffer[ line*scanlineSize + col ] = fontdata[ charIdx*CHAR_SIZE + segment];
+                
+            }
+        }
+    }
 }
 
-Bool exportFontWithName(const utf8 *name) {
-    const utf8 *outputFilePath=NULL, *outputFileName=NULL;
-    FILE *outputFile=NULL; const Font *font=NULL;
-    assert( name!=NULL );
+/**
+ * Writes the font image to the provided file using BMP format
+ * @param outputFile      The file where the font image will be written
+ * @param outputFilePath  The path to file where the font image will be written (only used for error report)
+ * @param orientation     The order of characters in the image (vertical slices, horizontal slices)
+ * @param font            The font to export
+ */
+Bool exportFontToBmpFile(FILE         *outputFile,
+                         const utf8   *outputFilePath,
+                         Orientation  orientation,
+                         const Font   *font)
+{
+    BmpHeader bmp; Byte* pixelData = NULL;
+    static const Byte colorTable[] = { 255,255,255,0,  0,0,0,0 };
     
-    if (isRunning()) {
-        font = getFontWithName(name);
-        if (!font) { err2(ERR_NONEXISTENT_FONT,name); }
+    if (isRunning()) { /* 1) set bmp header */
+        if (!setBmpHeader(&bmp, FONTIMG_SIZE, FONTIMG_SIZE, FONTIMG_NUMOFCOLORS)) { err(ERR_INTERNAL_ERROR); }
     }
+    if (isRunning()) { /* 2) copy font to an image-buffer and write it into file */
+        pixelData = malloc(bmp.pixelDataSize);
+        exportFontToImageBuffer(pixelData, bmp.pixelDataSize, -bmp.scanlineSize, orientation, font);
+        if (!fwriteBmp(&bmp, colorTable, sizeof(colorTable), pixelData, bmp.pixelDataSize, outputFile))
+        { err2(ERR_CANNOT_WRITE_FILE,outputFilePath); }
+    }
+    free(pixelData);
+    return isRunning();
+}
+    
+/**
+ * Exports the provided font to a file with the font image
+ * @param font         The font to export
+ * @param orientation  The order of characters in the image (vertical slices, horizontal slices)
+ */
+Bool exportFont(const Font *font, Orientation orientation) {
+    const utf8 *outputFilePath=NULL, *outputFileName=NULL;  FILE *outputFile=NULL;
+    assert( font!=NULL );
+    assert( orientation==HORIZONTAL || orientation==VERTICAL );
+
     if (isRunning()) {
-        outputFileName = allocConcatenation(FONTIMG_PREFIX, name);
+        outputFileName = allocConcatenation(FONTIMG_PREFIX, font->name);
         outputFilePath = allocFilePath(outputFileName, ".bmp", FORCED_EXTENSION);
         if (!outputFileName || !outputFileName) { err(ERR_NOT_ENOUGH_MEMORY); }
     }
@@ -251,14 +301,23 @@ Bool exportFontWithName(const utf8 *name) {
         if (!outputFile) { err2(ERR_CANNOT_CREATE_FILE,outputFilePath); }
     }
     if (isRunning()) {
-        printf("Exporting font %s to file '%s'", name, outputFilePath);
-        exportFont(font, outputFile);
+        printf("Exporting font %s to file '%s'", font->name, outputFilePath);
+        exportFontToBmpFile(outputFile, outputFilePath, orientation, font);
     }
     /* clean up and return */
     if (outputFile) { fclose(outputFile); }
     free((void*)outputFilePath);
     free((void*)outputFileName);
     return isRunning();
+}
+
+Bool exportFontWithName(const utf8 *name, Orientation orientation) {
+    const Font *font;
+    assert( name!=NULL );
+    assert( orientation==HORIZONTAL || orientation==VERTICAL );
+    font = getFontWithName(name);
+    if (!font) { return err2(ERR_NONEXISTENT_FONT,name); }
+    else       { return exportFont(font,orientation);    }
 }
 
 /*=================================================================================================================*/
@@ -498,7 +557,7 @@ int main(int argc, char* argv[]) {
             
         case EXPORT_FONT:
             fontName = firstValid( fontName, inputFileName, NULL );
-            exportFontWithName( fontName );
+            exportFontWithName( fontName, orientation );
             break;
             
         case GENERATE_IMAGE:
