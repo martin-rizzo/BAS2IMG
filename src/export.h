@@ -1,6 +1,6 @@
 /**
- * @file       font.h
- * @date       Feb 17, 2020
+ * @file       export.h
+ * @date       Feb 16, 2020
  * @author     Martin Rizzo | <martinrizzo@gmail.com>
  * @copyright  Copyright (c) 2020 Martin Rizzo.
  *             This project is released under the MIT License.
@@ -29,20 +29,21 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#ifndef bas2img_font_h
-#define bas2img_font_h
+#ifndef bas2img_export_h
+#define bas2img_export_h
+#include "font.h"
 
 
-typedef struct Font {
-    const char* name;
-    const char* description;
-    unsigned char data[2048];
-} Font;
+/**
+ * Exports the provided font to an image file
+ *
+ * The image is stored in the current working directory and the name
+ * of the file is generated concatenating a suffix with the font name.
+ * @param font         The font to export
+ * @param orientation  The order of characters in the image (vertical slices, horizontal slices)
+ */
+Bool exportFont(const Font *font, Orientation orientation);
 
 
-extern const Font font__msx;
-extern const Font font__msx_din;
 
-
-
-#endif /* bas2img_font_h */
+#endif /* bas2img_export_h */

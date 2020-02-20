@@ -1,5 +1,5 @@
 /**
- * @file       font.h
+ * @file       helpers.h
  * @date       Feb 17, 2020
  * @author     Martin Rizzo | <martinrizzo@gmail.com>
  * @copyright  Copyright (c) 2020 Martin Rizzo.
@@ -29,20 +29,29 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#ifndef bas2img_font_h
-#define bas2img_font_h
+#ifndef bas2img_helpers_h
+#define bas2img_helpers_h
 
 
-typedef struct Font {
-    const char* name;
-    const char* description;
-    unsigned char data[2048];
-} Font;
+/**
+ * Replaces the sign '$' contained in message with the text provided in 'str'
+ * @param buffer   The buffer where the composed string will be written
+ * @param message  The message to copy to the buffer
+ * @param str      The text to use as a replacement for the sign '$' (optional, can be NULL)
+ */
+const utf8 * strblend(utf8 *buffer, const utf8 *message, const utf8 *str);
+
+/**
+ * Returns the file size in bytes
+ */
+long getFileSize(FILE *file);
+
+const utf8 * allocConcatenation(const utf8 *firstString, const utf8 *secondString);
 
 
-extern const Font font__msx;
-extern const Font font__msx_din;
+const utf8* allocFilePath(const utf8* originalFilePath, const utf8* newExtension, ExtensionMethod method);
 
 
 
-#endif /* bas2img_font_h */
+#endif /* bas2img_helpers_h */
+

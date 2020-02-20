@@ -1,5 +1,5 @@
 /**
- * @file       font.h
+ * @file       error.h
  * @date       Feb 17, 2020
  * @author     Martin Rizzo | <martinrizzo@gmail.com>
  * @copyright  Copyright (c) 2020 Martin Rizzo.
@@ -29,20 +29,39 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#ifndef bas2img_font_h
-#define bas2img_font_h
+#ifndef bas2img_error_h
+#define bas2img_error_h
+
+/* supported errors */
+typedef enum ErrorID {
+    SUCCESS=0, ERR_UNKNOWN_PARAM, ERR_FILE_NOT_FOUND, ERR_FILE_TOO_LARGE, ERR_FILE_TOO_SMALL,
+    ERR_CANNOT_CREATE_FILE, ERR_CANNOT_READ_FILE, ERR_CANNOT_WRITE_FILE, ERR_NOT_ENOUGH_MEMORY,
+    ERR_GIF_NOT_SUPPORTED, ERR_FILE_IS_NOT_BMP, ERR_BMP_MUST_BE_128PX, ERR_BMP_MUST_BE_1BIT,
+    ERR_BMP_UNSUPPORTED_FORMAT, ERR_BMP_INVALID_FORMAT, ERR_NONEXISTENT_FONT,
+    ERR_INTERNAL_ERROR
+} ErrorID;
+
+typedef struct Error { ErrorID id; const utf8 *str; } Error;
+
+extern Error theError;
+
+#define isRunning() (theError.id==SUCCESS)
+
+#define err(id) err2(id,NULL);
+
+Bool err2(ErrorID errorID, const utf8 *str);
+
+Bool printErrorMessage(void);
 
 
-typedef struct Font {
-    const char* name;
-    const char* description;
-    unsigned char data[2048];
-} Font;
-
-
-extern const Font font__msx;
-extern const Font font__msx_din;
+#ifdef NDEBUG
+#    define DLOG(x)
+#else
+#    define DLOG(x) printf x; printf("\n")
+#endif
 
 
 
-#endif /* bas2img_font_h */
+#endif /* bas2img_error_h */
+
+

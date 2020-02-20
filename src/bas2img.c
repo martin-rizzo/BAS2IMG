@@ -33,41 +33,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include "bas2img.h"
+#include "helpers.h"
+#include "error.h"
+#include "export.h"
 #include "font.h"
 #include "bmp.h"
 #include "gif.h"
 #define VERSION   "0.1"
 #define COPYRIGHT "Copyright (c) 2020 Martin Rizzo"
-#define MIN_FILE_SIZE       (0)           /* < minimum size for loadable files (in bytes)       */
-#define MAX_FILE_SIZE       (1024L*1024L) /* < maximum size for loadable files (in bytes)       */
-#define DIR_SEPARATOR1      '\\'          /* < char used to separate directories in a path      */
-#define DIR_SEPARATOR2      '/'           /* < char used to separate directories in a path      */
-#define EXT_SEPARATOR       '.'           /* < char used as file extension separator            */
-#define CHAR_SIZE           8             /* < the width & height of each character (in pixels) */
-#define FONTIMG_SIZE        128           /* < the width & height of font images (in pixels)    */
-#define FONTIMG_NUMOFCOLORS 2             /* < the number of colors of font images              */
-#define FONTIMG_PREFIX      "font__"      /* < prefix used when exporting fonts                 */
-#define isOption(param,opname1,opname2)   (strcmp(param,opname1)==0 || strcmp(param,opname2)==0)
-typedef unsigned char Byte;               /* < Byte (size=8bits)                                */
-typedef char utf8;                        /* < unicode variable width character encoding        */
-typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean                                          */
 
-/* supported errors */
-typedef enum ErrorID {
-    SUCCESS=0, ERR_UNKNOWN_PARAM, ERR_FILE_NOT_FOUND, ERR_FILE_TOO_LARGE, ERR_FILE_TOO_SMALL,
-    ERR_CANNOT_CREATE_FILE, ERR_CANNOT_READ_FILE, ERR_CANNOT_WRITE_FILE, ERR_NOT_ENOUGH_MEMORY,
-    ERR_GIF_NOT_SUPPORTED, ERR_FILE_IS_NOT_BMP, ERR_BMP_MUST_BE_128PX, ERR_BMP_MUST_BE_1BIT,
-    ERR_BMP_UNSUPPORTED_FORMAT, ERR_BMP_INVALID_FORMAT, ERR_NONEXISTENT_FONT,
-    ERR_INTERNAL_ERROR
-} ErrorID;
 
-typedef enum ExtensionMethod { OPTIONAL_EXTENSION, FORCED_EXTENSION } ExtensionMethod;
-typedef enum ImageFormat     { BMP, GIF             } ImageFormat;
-typedef enum Orientation     { HORIZONTAL, VERTICAL } Orientation;
-typedef enum Mode            { GENERATE_IMAGE, LIST_ALL_COMPUTERS, LIST_ALL_FONTS, EXPORT_FONT, IMPORT_FONT } Mode;
-
-typedef struct Error { ErrorID id; const utf8 *str; } Error;
-
+typedef enum Mode { GENERATE_IMAGE, LIST_ALL_COMPUTERS, LIST_ALL_FONTS, EXPORT_FONT, IMPORT_FONT } Mode;
 
 
 /*=================================================================================================================*/
@@ -96,30 +73,6 @@ static void listAllFonts(void) {
 /*=================================================================================================================*/
 #pragma mark - > HELPER FUNCTIONS
 
-/**
- * Replaces the sign '$' contained in message with the text provided in 'str'
- * @param buffer   The buffer where the composed string will be written
- * @param message  The message to copy to the buffer
- * @param str      The text to use as a replacement for the sign '$' (optional, can be NULL)
- */
-static const utf8 * strblend(utf8 *buffer, const utf8 *message, const utf8 *str) {
-    utf8 *dest; const utf8 *ptr;
-    assert( buffer!=NULL && message!=NULL );
-    dest=buffer; ptr=message; while (*ptr!='$' && *ptr!='\0') { *dest++=*ptr++; }
-    if (*ptr=='$' && str) { ++ptr; while (*str!='\0') { *dest++=*str++; } }
-    while (*ptr!='\0') { *dest++=*ptr++; }; *dest='\0';
-    return buffer;
-}
-
-/**
- * Returns the file size in bytes
- */
-static long getFileSize(FILE *file) {
-    long fileSize; assert( file!=NULL );
-    fseek(file,0,SEEK_END); fileSize=ftell(file); rewind(file);
-    return fileSize;
-}
-
 static const utf8 * getOptionCfg(int *inout_index, int argc, char* argv[]) {
     const int nexti = (*inout_index)+1; const utf8 *nextparam = "";
     if ( nexti<argc && argv[nexti][0]!='-' ) { (*inout_index)=nexti; nextparam=argv[nexti]; }
@@ -133,192 +86,11 @@ static const utf8 * firstValid(const utf8 *name1, const utf8 *name2, const utf8 
     return "";
 }
 
-static const utf8 * allocConcatenation(const utf8 *firstString, const utf8 *secondString) {
-    utf8 *string;
-    assert( firstString!=NULL && secondString!=NULL );
-    string = malloc( strlen(firstString)+strlen(secondString)+1 );
-    strcpy(string,firstString); strcat(string,secondString);
-    return string;
-}
-
-/**
- *
- */
-static const utf8* allocFilePath(const utf8* originalFilePath, const utf8* newExtension, ExtensionMethod method) {
-    const utf8 *fileName, *sour; utf8 *dest, *oldExtension=NULL;
-    assert( originalFilePath!=NULL && newExtension!=NULL );
-    assert( method==OPTIONAL_EXTENSION || method==FORCED_EXTENSION );
-    
-    fileName = dest = malloc( strlen(originalFilePath)+strlen(newExtension)+1 );
-    for (sour=originalFilePath; *sour!='\0'; *dest++=*sour++) {
-        if (*sour==EXT_SEPARATOR) { oldExtension=dest; }
-    }
-    if (method==FORCED_EXTENSION || (method==OPTIONAL_EXTENSION && !oldExtension)) {
-        if (oldExtension) { dest=oldExtension; }
-        sour=newExtension; while (*sour!='\0') { *dest++=*sour++; }
-    }
-    *dest='\0';
-    return fileName;
-}
-
-
 
 /*=================================================================================================================*/
 #pragma mark - > HANDLING ERRORS
 
-static Error theError = { SUCCESS, NULL };
 
-static Bool err2(ErrorID errorID, const utf8 *str) {
-    free((void*)theError.str);
-    theError.id  = errorID;
-    theError.str = strdup(str);
-    return errorID==SUCCESS;
-}
-
-#define isRunning() (theError.id==SUCCESS)
-
-#define err(id) err2(id,NULL);
-
-#ifdef NDEBUG
-#    define DLOG(x)
-#else
-#    define DLOG(x) printf x; printf("\n")
-#endif
-
-
-static Bool printErrorMessage(void) {
-    const utf8 *message; Error* error=&theError;
-    utf8 *buffer = NULL;
-    switch (error->id) {
-        case SUCCESS:                message = "SUCCESS"; break;
-        case ERR_UNKNOWN_PARAM:      message = "unknown parameter '$'"; break;
-        case ERR_FILE_NOT_FOUND:     message = "file '$' cannot be found"; break;
-        case ERR_FILE_TOO_LARGE:     message = "file '$' is too large"; break;
-        case ERR_FILE_TOO_SMALL:     message = "file '$' is too small"; break;
-        case ERR_CANNOT_CREATE_FILE: message = "file '$' cannot be created"; break;
-        case ERR_CANNOT_READ_FILE:   message = "file '$' cannot be accessed"; break;
-        case ERR_CANNOT_WRITE_FILE:  message = "file '$' cannot be written"; break;
-        case ERR_NOT_ENOUGH_MEMORY:  message = "not enough memory"; break;
-        case ERR_GIF_NOT_SUPPORTED:  message = "GIF format isn't supported yet"; break;
-        case ERR_FILE_IS_NOT_BMP:    message = "file '$' is not a BMP file"; break;
-        case ERR_BMP_MUST_BE_128PX:  message = "image in '$' must have a size of exactly 128 by 128 pixels"; break;
-        case ERR_BMP_MUST_BE_1BIT:   message = "image in '$' must be 1 bit per pixel monochrome bitmap"; break;
-        case ERR_BMP_UNSUPPORTED_FORMAT: message = "the BMP format in '$' is not supported by BAS2IMG"; break;
-        case ERR_BMP_INVALID_FORMAT: message = "file '$' has a wrong BMP format or is corrupt"; break;
-        case ERR_NONEXISTENT_FONT:   message = "The font '$' does not exist. Use the '--list-fonts' option for a list of available fonts."; break;
-        case ERR_INTERNAL_ERROR:     message = "Internal error (?)"; break;
-        default:                     message = "unknown error"; break;
-    }
-    if (error->str)  {
-        buffer  = malloc(strlen(message)+strlen(error->str)+1);
-        message = strblend(buffer,message,error->str);
-    }
-    printf("%s %s\n", "error:", message);
-    free( (void*)buffer     ); buffer=NULL;
-    free( (void*)error->str ); error->str=NULL;
-    return error->id;
-}
-
-
-
-/*=================================================================================================================*/
-#pragma mark - > EXPORTING FONTS TO IMAGE FILE
-
-
-void exportFontToImageBuffer(Byte*       buffer,
-                             int         bufferSize,
-                             int         scanlineSize,
-                             Orientation orientation,
-                             const Font  *font)
-{
-    Bool upsideDown = FALSE;
-    const Byte *fontdata = font->data;
-    int x,y,col,row,segment,line,charIdx;
-    assert( bufferSize>=(FONTIMG_SIZE*FONTIMG_SIZE)/8 );
-    
-    /* handle "upside-down" images */
-    if (scanlineSize<0) { scanlineSize=-scanlineSize; upsideDown=TRUE; }
-    /* write one by one all of 256 characters */
-    charIdx=0; for (y=0; y<(FONTIMG_SIZE/CHAR_SIZE); ++y) {
-        for (x=0; x<(FONTIMG_SIZE/CHAR_SIZE); ++x,++charIdx) {
-            assert( charIdx<=255 );
-            col = (orientation==HORIZONTAL ? x : y);
-            row = (orientation==HORIZONTAL ? y : x);
-            for (segment=0; segment<CHAR_SIZE; ++segment) {
-                line = row*CHAR_SIZE+segment; if (upsideDown) { line = (FONTIMG_SIZE-1)-line; }
-                buffer[ line*scanlineSize + col ] = fontdata[ charIdx*CHAR_SIZE + segment];
-                
-            }
-        }
-    }
-}
-
-/**
- * Writes the font image to the provided file using BMP format
- * @param outputFile      The file where the font image will be written
- * @param outputFilePath  The path to file where the font image will be written (only used for error report)
- * @param orientation     The order of characters in the image (vertical slices, horizontal slices)
- * @param font            The font to export
- */
-Bool exportFontToBmpFile(FILE         *outputFile,
-                         const utf8   *outputFilePath,
-                         Orientation  orientation,
-                         const Font   *font)
-{
-    BmpHeader bmp; Byte* pixelData = NULL;
-    static const Byte colorTable[] = { 255,255,255,0,  0,0,0,0 };
-    
-    if (isRunning()) { /* 1) set bmp header */
-        if (!setBmpHeader(&bmp, FONTIMG_SIZE, FONTIMG_SIZE, FONTIMG_NUMOFCOLORS)) { err(ERR_INTERNAL_ERROR); }
-    }
-    if (isRunning()) { /* 2) copy font to an image-buffer and write it into file */
-        pixelData = malloc(bmp.pixelDataSize);
-        exportFontToImageBuffer(pixelData, bmp.pixelDataSize, -bmp.scanlineSize, orientation, font);
-        if (!fwriteBmp(&bmp, colorTable, sizeof(colorTable), pixelData, bmp.pixelDataSize, outputFile))
-        { err2(ERR_CANNOT_WRITE_FILE,outputFilePath); }
-    }
-    free(pixelData);
-    return isRunning();
-}
-    
-/**
- * Exports the provided font to a file with the font image
- * @param font         The font to export
- * @param orientation  The order of characters in the image (vertical slices, horizontal slices)
- */
-Bool exportFont(const Font *font, Orientation orientation) {
-    const utf8 *outputFilePath=NULL, *outputFileName=NULL;  FILE *outputFile=NULL;
-    assert( font!=NULL );
-    assert( orientation==HORIZONTAL || orientation==VERTICAL );
-
-    if (isRunning()) {
-        outputFileName = allocConcatenation(FONTIMG_PREFIX, font->name);
-        outputFilePath = allocFilePath(outputFileName, ".bmp", FORCED_EXTENSION);
-        if (!outputFileName || !outputFileName) { err(ERR_NOT_ENOUGH_MEMORY); }
-    }
-    if (isRunning()) {
-        outputFile = fopen(outputFilePath, "wb");
-        if (!outputFile) { err2(ERR_CANNOT_CREATE_FILE,outputFilePath); }
-    }
-    if (isRunning()) {
-        printf("Exporting font %s to file '%s'", font->name, outputFilePath);
-        exportFontToBmpFile(outputFile, outputFilePath, orientation, font);
-    }
-    /* clean up and return */
-    if (outputFile) { fclose(outputFile); }
-    free((void*)outputFilePath);
-    free((void*)outputFileName);
-    return isRunning();
-}
-
-Bool exportFontWithName(const utf8 *name, Orientation orientation) {
-    const Font *font;
-    assert( name!=NULL );
-    assert( orientation==HORIZONTAL || orientation==VERTICAL );
-    font = getFontWithName(name);
-    if (!font) { return err2(ERR_NONEXISTENT_FONT,name); }
-    else       { return exportFont(font,orientation);    }
-}
 
 /*=================================================================================================================*/
 #pragma mark - > IMPORTING FONT INTO C-ARRAY
@@ -485,7 +257,7 @@ Bool writeCArrayFromImage(const utf8  *outputFilePath,
 
 
 int main(int argc, char* argv[]) {
-    int i;
+    int i; const Font *font;
     Bool printHelpAndExit      = FALSE;
     Bool printVersionAndExit   = FALSE;
     Bool briefListing          = TRUE;
@@ -557,7 +329,9 @@ int main(int argc, char* argv[]) {
             
         case EXPORT_FONT:
             fontName = firstValid( fontName, inputFileName, NULL );
-            exportFontWithName( fontName, orientation );
+            font     = getFontWithName(fontName);
+            if (!font) { return err2(ERR_NONEXISTENT_FONT,fontName); }
+            else       { exportFont(font,orientation);               }
             break;
             
         case GENERATE_IMAGE:
