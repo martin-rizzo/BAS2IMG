@@ -33,12 +33,14 @@
 #define bas2img_h
 
 
-#define MIN_FILE_SIZE       (0)           /* < minimum size for loadable files (in bytes)       */
-#define MAX_FILE_SIZE       (1024L*1024L) /* < maximum size for loadable files (in bytes)       */
-#define CHAR_SIZE           8             /* < the width & height of each character (in pixels) */
-#define FONTIMG_SIZE        128           /* < the width & height of font images (in pixels)    */
-#define FONTIMG_NUMOFCOLORS 2             /* < the number of colors of font images              */
-#define FONTIMG_PREFIX      "font__"      /* < prefix used when exporting fonts                 */
+#define MIN_FILE_SIZE        (0)           /* < minimum size for loadable files (in bytes)  */
+#define MAX_FILE_SIZE        (1024L*1024L) /* < maximum size for loadable files (in bytes)  */
+#define CHAR_IMG_WIDTH       8             /* < the width of each character (in pixels)     */
+#define CHAR_IMG_HEIGHT      8             /* < the height of each character (in pixels)    */
+#define FONT_IMG_WIDTH       128           /* < the font image width (in pixels)            */
+#define FONT_IMG_HEIGHT      128           /* < the font image height (in pixels)           */
+#define FONT_IMG_NUMOFCOLORS 2             /* < the number of colors of font images         */
+#define FONT_IMG_PREFIX      "font__"      /* < prefix used when exporting fonts            */
 #define isOption(param,opname1,opname2)   (strcmp(param,opname1)==0 || strcmp(param,opname2)==0)
 
 

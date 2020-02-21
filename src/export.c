@@ -38,7 +38,13 @@
 #include "font.h"
 #include "bmp.h"
 
-
+/**
+ * Stores a font image of 1-bit-per-pixel into the provided buffer
+ * @param buffer       The buffer where the image will be stored
+ * @param bufferSize   The buffer size (in bytes)
+ * @param scanlineSize The number of bytes from one line of pixels to the next (negative means make an "upside-down" image)
+ * @param orientation  The order of characters in the image (vertical slices, horizontal slices)
+ */
 static void exportFontToImageBuffer(Byte*       buffer,
                                     int         bufferSize,
                                     int         scanlineSize,
@@ -48,19 +54,25 @@ static void exportFontToImageBuffer(Byte*       buffer,
     Bool upsideDown = FALSE;
     const Byte *fontdata = font->data;
     int x,y,col,row,segment,line,charIdx;
-    assert( bufferSize>=(FONTIMG_SIZE*FONTIMG_SIZE)/8 );
+    assert( buffer!=NULL );
+    assert( bufferSize>=(scanlineSize*FONT_IMG_HEIGHT) );
+    assert( scanlineSize>=FONT_IMG_WIDTH/8 );
+    /* this function assumes square images to make easier */
+    /* support horizontal & vertical orientation          */
+    assert( FONT_IMG_WIDTH==FONT_IMG_HEIGHT );
+    assert( CHAR_IMG_WIDTH==CHAR_IMG_HEIGHT );
     
     /* handle "upside-down" images */
     if (scanlineSize<0) { scanlineSize=-scanlineSize; upsideDown=TRUE; }
     /* write one by one all of 256 characters */
-    charIdx=0; for (y=0; y<(FONTIMG_SIZE/CHAR_SIZE); ++y) {
-        for (x=0; x<(FONTIMG_SIZE/CHAR_SIZE); ++x,++charIdx) {
+    charIdx=0; for (y=0; y<(FONT_IMG_HEIGHT/CHAR_IMG_HEIGHT); ++y) {
+        for (x=0; x<(FONT_IMG_WIDTH/CHAR_IMG_WIDTH); ++x,++charIdx) {
             assert( charIdx<=255 );
             col = (orientation==HORIZONTAL ? x : y);
             row = (orientation==HORIZONTAL ? y : x);
-            for (segment=0; segment<CHAR_SIZE; ++segment) {
-                line = row*CHAR_SIZE+segment; if (upsideDown) { line = (FONTIMG_SIZE-1)-line; }
-                buffer[ line*scanlineSize + col ] = fontdata[ charIdx*CHAR_SIZE + segment];
+            for (segment=0; segment<CHAR_IMG_HEIGHT; ++segment) {
+                line = row*CHAR_IMG_HEIGHT+segment; if (upsideDown) { line = (FONT_IMG_HEIGHT-1)-line; }
+                buffer[ line*scanlineSize + col ] = fontdata[ charIdx*CHAR_IMG_HEIGHT + segment];
                 
             }
         }
@@ -83,7 +95,8 @@ static Bool exportFontToBmpFile(FILE         *outputFile,
     static const Byte colorTable[] = { 255,255,255,0,  0,0,0,0 };
     
     if (isRunning()) { /* 1) set bmp header */
-        if (!setBmpHeader(&bmp, FONTIMG_SIZE, FONTIMG_SIZE, FONTIMG_NUMOFCOLORS)) { err(ERR_INTERNAL_ERROR); }
+        if (!setBmpHeader(&bmp, FONT_IMG_WIDTH, FONT_IMG_HEIGHT, FONT_IMG_NUMOFCOLORS))
+        { err(ERR_INTERNAL_ERROR); }
     }
     if (isRunning()) { /* 2) copy font to an image-buffer and write it into file */
         pixelData = malloc(bmp.pixelDataSize);
@@ -109,7 +122,7 @@ Bool exportFont(const Font *font, Orientation orientation) {
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
 
     if (isRunning()) {
-        outputFileName = allocConcatenation(FONTIMG_PREFIX, font->name);
+        outputFileName = allocConcatenation(FONT_IMG_PREFIX, font->name);
         outputFilePath = allocFilePath(outputFileName, ".bmp", FORCED_EXTENSION);
         if (!outputFileName || !outputFileName) { err(ERR_NOT_ENOUGH_MEMORY); }
     }
