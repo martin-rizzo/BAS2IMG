@@ -32,7 +32,6 @@
 #ifndef bas2img_export_h
 #define bas2img_export_h
 #include "types.h"
-#include "font.h"
 
 
 /**

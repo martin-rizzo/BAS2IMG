@@ -36,16 +36,16 @@
 #include "bas2img.h"
 #include "helpers.h"
 #include "error.h"
+#include "database.h"
 #include "import.h"
 #include "export.h"
-#include "font.h"
 #include "bmp.h"
 #include "gif.h"
 #define VERSION   "0.1"
 #define COPYRIGHT "Copyright (c) 2020 Martin Rizzo"
 
 
-typedef enum Mode { GENERATE_IMAGE, LIST_ALL_COMPUTERS, LIST_ALL_FONTS, EXPORT_FONT, IMPORT_FONT } Mode;
+typedef enum Mode { GENERATE_IMAGE, LIST_COMPUTERS, LIST_FONTS, EXPORT_FONT, IMPORT_FONT } Mode;
 
 
 
@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
     int i; const Font *font;
     Bool printHelpAndExit      = FALSE;
     Bool printVersionAndExit   = FALSE;
-    Bool briefListing          = TRUE;
+    Bool fullListing           = TRUE;
     Mode        mode           = GENERATE_IMAGE;
     ImageFormat imageFormat    = BMP;
     Orientation orientation    = HORIZONTAL;
@@ -103,9 +103,9 @@ int main(int argc, char* argv[]) {
     for (i=1; i<argc; ++i) { param=argv[i];
         if      ( param[0]!='-' ) { inputFileName=param; }
         else if ( isOption(param,"-c","--computer"   ) ) { computerName=getOptionCfg(&i,argc,argv);    }
-        else if ( isOption(param,"-l","--list"       ) ) { mode=LIST_ALL_COMPUTERS; briefListing=TRUE;   }
-        else if ( isOption(param,"-L","--list-all"   ) ) { mode=LIST_ALL_COMPUTERS; briefListing=FALSE;  }
-        else if ( isOption(param,"-f","--list-fonts" ) ) { mode=LIST_ALL_FONTS;      }
+        else if ( isOption(param,"-l","--list"       ) ) { mode=LIST_COMPUTERS; fullListing=FALSE; }
+        else if ( isOption(param,"-L","--list-all"   ) ) { mode=LIST_COMPUTERS; fullListing=TRUE;  }
+        else if ( isOption(param,"-f","--list-fonts" ) ) { mode=LIST_FONTS;     fullListing=TRUE;  }
         else if ( isOption(param,"-b","--bmp"        ) ) { imageFormat=BMP;          }
         else if ( isOption(param,"-g","--gif"        ) ) { imageFormat=GIF;          }
         else if ( isOption(param,"-H","--horizontal" ) ) { orientation=HORIZONTAL;   }
@@ -128,12 +128,12 @@ int main(int argc, char* argv[]) {
     }
     switch (mode) {
             
-        case LIST_ALL_COMPUTERS:
-            printf("list all computers operation is not implemented yet.\n");
+        case LIST_COMPUTERS:
+            printAvailableComputers(fullListing);
             break;
             
-        case LIST_ALL_FONTS:
-            listAllFonts();
+        case LIST_FONTS:
+            printAvailableFonts(fullListing);
             break;
             
         case IMPORT_FONT:

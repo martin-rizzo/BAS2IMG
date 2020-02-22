@@ -1,5 +1,5 @@
 /**
- * @file       font.h
+ * @file       database.h
  * @date       Feb 17, 2020
  * @author     Martin Rizzo | <martinrizzo@gmail.com>
  * @copyright  Copyright (c) 2020 Martin Rizzo.
@@ -29,27 +29,37 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#ifndef bas2img_font_h
-#define bas2img_font_h
+#ifndef bas2img_database_h
+#define bas2img_database_h
 #include "types.h"
 
 
-typedef struct Font {
-    const char* name;
-    const char* description;
-    unsigned char data[2048];
-} Font;
+
 
 /**
  * Returns the information of the font that match with the provided name
  */
 const Font * getFont(const utf8 *name);
 
+
 /**
- * Lists all available fonts
+ * Prints the list of available file decoders to stdout
+ * @param printAll  If it is 'FALSE' then only main decoders will be printed
  */
-void listAllFonts(void);
+void printAvailableDecoders(Bool printAll);
+
+/**
+ * Prints the list of available fonts to stdout
+ * @param printAll  If it is 'FALSE' then only main fonts will be printed
+ */
+void printAvailableFonts(Bool printAll);
+
+/**
+ * Prints the list of available computers to stdout
+ * @param printAll  If it is 'FALSE' then only main computers will be printed
+ */
+void printAvailableComputers(Bool printAll);
 
 
 
-#endif /* bas2img_font_h */
+#endif /* bas2img_database_h */

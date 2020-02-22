@@ -1,12 +1,15 @@
 
 CC = cc
 RM = rm -f
-BIN_DIR  = ../bin
+BIN_DIR   = ../bin
+DECOS_DIR = ./decos
+FONTS_DIR = ./fonts
 
 ## files ##
-HEADERS        = bas2img.h types.h helpers.h error.h import.h export.h font.h bmp.h gif.h
-FONTS          = font__atari.h font__msx.h font__msx-din.h
-OBJECTS        = bas2img helpers error import export font bmp
+HEADERS  = bas2img.h types.h helpers.h error.h database.h import.h export.h bmp.h gif.h
+DECOS    = d-atari d-msx d-msxasc
+FONTS    = f-atari f-msx f-msxdin
+SOURCES  = bas2img helpers error database import export bmp
 TARGET_RELEASE = $(BIN_DIR)/bas2img
 TARGET_DEBUG   = $(BIN_DIR)/bas2img_d
 
@@ -18,8 +21,9 @@ CFLAGS_ERRORS  = -Wall -pedantic-errors -Wno-unused-function
 CFLAGS         = $(CFLAGS_ANSI) $(CFLAGS_ERRORS)
 
 
-OBJS_RELEASE = $(addsuffix _r.o, $(OBJECTS))
-OBJS_DEBUG   = $(addsuffix _d.o, $(OBJECTS))
+EXTRA        = $(addprefix $(DECOS_DIR)/,$(DECOS)) $(addprefix $(FONTS_DIR)/,$(FONTS))
+OBJS_RELEASE = $(addsuffix _r.o, $(SOURCES) $(EXTRA))
+OBJS_DEBUG   = $(addsuffix _d.o, $(SOURCES) $(EXTRA))
 
 
 .PHONY: all debug release clean
@@ -37,7 +41,7 @@ $(TARGET_DEBUG): $(OBJS_DEBUG)
 	$(CC) $(CONFIG_DEBUG)  -o $@  $^
 
 
-%_d.o: %.c $(HEADERS) $(FONTS)
+%_d.o: %.c $(HEADERS)
 	$(CC) -c $(CFLAGS) $(CONFIG_DEBUG)  -o $@  $<
 
 
@@ -50,7 +54,7 @@ release: $(TARGET_RELEASE)
 $(TARGET_RELEASE): $(OBJS_RELEASE)
 	$(CC) $(CONFIG_RELEASE)  -o $@  $^
 
-%_r.o: %.c $(HEADERS) $(FONTS)
+%_r.o: %.c $(HEADERS)
 	$(CC) -c $(CFLAGS) $(CONFIG_RELEASE)  -o $@  $<
 
 

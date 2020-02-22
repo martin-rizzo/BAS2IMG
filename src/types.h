@@ -32,15 +32,43 @@
 #ifndef bas2img_types_h
 #define bas2img_types_h
 
-/* generic types */
+/* generic simple types */
+
 typedef unsigned char Byte;               /* < Byte (size=8bits)                                */
 typedef          char utf8;               /* < unicode variable width character encoding        */
 typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean                                          */
 
-/* bas2img own types */
-typedef enum ImageFormat     { BMP, GIF             } ImageFormat;
-typedef enum Orientation     { HORIZONTAL, VERTICAL } Orientation;
+/* bas2img simple types */
 
+typedef enum ImageFormat { BMP, GIF             } ImageFormat;
+typedef enum Orientation { HORIZONTAL, VERTICAL } Orientation;
+
+
+/* bas2img more complex types */
+
+typedef Bool (*IsDecodableFunc)(Byte *data, int numberOfBytes);
+typedef Bool (*DecodeFunc)(Byte **inout_destPtr, Byte **inout_sourPtr);
+
+typedef struct Font {
+    const char *name;
+    const char *description;
+    unsigned char data[2048];
+} Font;
+
+typedef struct Decoder {
+    const char      *name;
+    const char      *description;
+    IsDecodableFunc isDecodable;
+    DecodeFunc      decode;
+    
+} Decoder;
+
+typedef struct Computer {
+    const char    *name;
+    const char    *description;
+    const Decoder *decoder;
+    const Font    *font;
+} Computer;
 
 
 #endif /* bas2img_types_h */

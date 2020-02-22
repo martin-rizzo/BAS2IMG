@@ -35,7 +35,6 @@
 #include "bas2img.h"
 #include "helpers.h"
 #include "error.h"
-#include "font.h"
 #include "bmp.h"
 
 /**
