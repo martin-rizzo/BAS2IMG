@@ -42,32 +42,41 @@
 /**
  * Writes C code representing an array containing all the font image stored in the buffer
  * @param outputFile    The file where the generated C code will be written
- * @param arrayName     The name of the C array
+ * @param fontName      The name of the font
  * @param imageBuffer   The buffer containing the image of 256 characters of 8x8 pixels (1 bit per pixel)
  * @param scanlineSize  The number of bytes from one line of pixels to the next (negative means "upside-down" image)
  * @param orientation   The order of characters in the image (vertical slices, horizontal slices)
  */
 static Bool writeCArrayFromImageBuffer(FILE       *outputFile,
-                                       const utf8 *arrayName,
+                                       const utf8 *fontName,
                                        const Byte *imageBuffer,
                                        int         scanlineSize,
                                        Orientation orientation) {
     Bool upsideDown = FALSE;
-    int x,y,col,row,line,segment,charIdx; const utf8 *separator;
+    int x,y,col,row,line,segment,charIdx;
+    const utf8 *separator; utf8 *arrayName=NULL;
     const int lastCharIdx=255;
+    static const utf8 defaultLongDescription[]  = "<< long description here >>";
+    static const utf8 defaultBriefDescription[] = "<< brief description here >>";
     assert( outputFile!=NULL );
-    assert( arrayName!=NULL && strlen(arrayName)>0 );
+    assert( fontName!=NULL && strlen(fontName)>0 );
     assert( imageBuffer!=NULL && scanlineSize!=0 );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
-    fprintf(outputFile, "const Byte font_%s[2048] = {", arrayName);
+
+    /* write the beginning of array definition */
+    arrayName = strdup(fontName);
+    fprintf(outputFile, "\n/** %s */\n", defaultLongDescription);
+    fprintf(outputFile, "static const Font %s = {\n", arrayName);
+    fprintf(outputFile, "    \"%s\", \"%s\", {", fontName, defaultBriefDescription);
 
     /* fix "upside-down" images */
     if (scanlineSize<0) { scanlineSize=-scanlineSize; upsideDown=TRUE; }
+    
     /* write one by one all of 256 characters */
     charIdx=0; for (y=0; y<16; ++y) {
         for (x=0; x<16; ++x,++charIdx) {
             assert( charIdx<=lastCharIdx );
-            if ((charIdx%2)==0) { fprintf(outputFile,"\n    "); }
+            if ((charIdx%2)==0) { fprintf(outputFile,"\n        "); }
             else                { fprintf(outputFile," "     ); }
             col = (orientation==HORIZONTAL ? x : y);
             row = (orientation==HORIZONTAL ? y : x);
@@ -79,7 +88,11 @@ static Bool writeCArrayFromImageBuffer(FILE       *outputFile,
             }
         }
     }
-    fprintf(outputFile, "\n};\n");
+    /* write the end of array definition */
+    fprintf(outputFile, "\n    }\n};\n");
+    
+    /* clean up and return */
+    free((void*)arrayName);
     return TRUE;
 }
 
@@ -128,14 +141,14 @@ static Bool writeCArrayFromBitmapFile(FILE       *outputFile,
     if (isRunning()) { /* 4) verify correct bitmap format */
         pixelDataSize    = (unsigned)imageFileSize-bmp.pixelDataOffset;
         requiredDataSize = (requiredWidth/8)*requiredHeight;
-        if      (bmp.fileType     !=0x4D42         ) { err(ERR_FILE_IS_NOT_BMP       ); }
-        else if (bmp.fileSize     !=imageFileSize  ) { err(ERR_BMP_INVALID_FORMAT    ); }
-        else if (bmp.imageWidth   !=requiredWidth  ) { err(ERR_BMP_MUST_BE_128PX     ); }
-        else if (bmp.imageHeight  !=requiredHeight ) { err(ERR_BMP_MUST_BE_128PX     ); }
-        else if (bmp.planes       !=1              ) { err(ERR_BMP_INVALID_FORMAT    ); }
-        else if (bmp.bitsPerPixel !=1              ) { err(ERR_BMP_MUST_BE_1BIT      ); }
-        else if (bmp.compression  !=0              ) { err(ERR_BMP_UNSUPPORTED_FORMAT); }
-        else if (pixelDataSize    <requiredDataSize) { err(ERR_BMP_INVALID_FORMAT    ); }
+        if      (bmp.fileType     !=0x4D42         ) { err2(ERR_FILE_IS_NOT_BMP       ,imageFilePath); }
+        else if (bmp.fileSize     !=imageFileSize  ) { err2(ERR_BMP_INVALID_FORMAT    ,imageFilePath); }
+        else if (bmp.imageWidth   !=FONT_IMG_WIDTH ) { err2(ERR_BMP_MUST_BE_128PX     ,imageFilePath); }
+        else if (bmp.imageHeight  !=FONT_IMG_HEIGHT) { err2(ERR_BMP_MUST_BE_128PX     ,imageFilePath); }
+        else if (bmp.planes       !=1              ) { err2(ERR_BMP_INVALID_FORMAT    ,imageFilePath); }
+        else if (bmp.bitsPerPixel !=1              ) { err2(ERR_BMP_MUST_BE_1BIT      ,imageFilePath); }
+        else if (bmp.compression  !=0              ) { err2(ERR_BMP_UNSUPPORTED_FORMAT,imageFilePath); }
+        else if (pixelDataSize    <requiredDataSize) { err2(ERR_BMP_INVALID_FORMAT    ,imageFilePath); }
     }
     if (isRunning()) { /* 5) write the C array to the output file */
         writeCArrayFromImageBuffer(outputFile, arrayName,
@@ -159,6 +172,7 @@ Bool writeCArrayFromImage(const utf8  *outputFilePath,
                           Orientation  orientation)
 {
     FILE *outputFile=NULL, *imageFile=NULL; long imageFileSize=0;
+    const utf8 *outputName, *fontName;
     assert( imageFilePath!=NULL );
     assert( imageFormat==BMP || imageFormat==GIF );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
@@ -167,8 +181,12 @@ Bool writeCArrayFromImage(const utf8  *outputFilePath,
     
     /* add extensions (when appropiate) */
     imageFilePath = allocFilePath(imageFilePath, ".bmp", OPTIONAL_EXTENSION);
+    /* get the path to the output file */
     if (outputFilePath) { outputFilePath = allocFilePath(outputFilePath,".c",OPTIONAL_EXTENSION); }
     else                { outputFilePath = allocFilePath(imageFilePath ,".c",FORCED_EXTENSION  ); }
+    /* get the font name */
+    outputName = allocFileNameWithoutExtension(outputFilePath);
+    fontName   = allocStringWithoutPrefix(outputName,"font__");
     
     if (isRunning()) { /* 1) open image file for reading */
         imageFile = fopen(imageFilePath,"rb");
@@ -184,12 +202,14 @@ Bool writeCArrayFromImage(const utf8  *outputFilePath,
         if (!outputFile) { err2(ERR_CANNOT_CREATE_FILE,outputFilePath); }
     }
     if (isRunning()) { /* 4) proceed! */
-        printf("Creating font source code in '%s'\n", outputFilePath);
-        writeCArrayFromBitmapFile(outputFile,"msx",imageFile,imageFileSize,imageFilePath,orientation);
+        printf("Creating source code for '%s' font in file: %s\n", fontName, outputFilePath);
+        writeCArrayFromBitmapFile(outputFile,fontName,imageFile,imageFileSize,imageFilePath,orientation);
     }
     /* clean up and return */
     if (imageFile     ) { fclose(imageFile ); imageFile =NULL; }
     if (outputFile    ) { fclose(outputFile); outputFile=NULL; }
+    if (fontName      ) { free((void*)fontName      ); fontName      =NULL; }
+    if (outputName    ) { free((void*)outputName    ); outputName    =NULL; }
     if (imageFilePath ) { free((void*)imageFilePath ); imageFilePath =NULL; }
     if (outputFilePath) { free((void*)outputFilePath); outputFilePath=NULL; }
     return isRunning();
