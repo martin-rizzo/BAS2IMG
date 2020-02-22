@@ -42,7 +42,7 @@ Error theError = { SUCCESS, NULL };
 Bool err2(ErrorID errorID, const utf8 *str) {
     free((void*)theError.str);
     theError.id  = errorID;
-    theError.str = strdup(str);
+    theError.str = str ? strdup(str) : NULL;
     return errorID==SUCCESS;
 }
 
