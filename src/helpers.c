@@ -54,6 +54,20 @@ const utf8 * strblend(utf8 *buffer, const utf8 *message, const utf8 *str) {
 }
 
 /**
+ * Duplicates the provided memory data allocating a new memory block
+ * @param sour           Pointer to the data to be duplicated
+ * @param numberOfBytes  The number of bytes to duplicate
+ * @returns              A pointer to the newly allocated data (or NULL if an error occurred)
+ */
+void * memdup(const void * sour, size_t numberOfBytes) {
+    void * dest;
+    assert( sour!=NULL && numberOfBytes>0 );
+    dest = malloc( numberOfBytes );
+    if (dest) { memcpy(dest,sour,numberOfBytes); }
+    return dest;
+}
+
+/**
  * Returns the file size in bytes
  */
 long getFileSize(FILE *file) {
@@ -91,3 +105,33 @@ const utf8* allocFilePath(const utf8* originalFilePath, const utf8* newExtension
     return fileName;
 }
 
+
+const utf8 * allocFileNameWithoutExtension(const utf8 *originalFilePath) {
+    size_t length;
+    const utf8 *begin, *end, *ptr; utf8 *fileName;
+    assert( originalFilePath!=NULL );
+    
+    begin = originalFilePath;
+    end   = NULL;
+    for (ptr=originalFilePath; *ptr!='\0'; ++ptr) {
+        if (*ptr==DIR_SEPARATOR1 || *ptr==DIR_SEPARATOR2) { begin=ptr+1; }
+        else if (*ptr==EXT_SEPARATOR)                     { end=ptr;     }
+    }
+    if (end==NULL) { end=ptr; }
+    
+    length   = (end-begin);
+    fileName = memdup(begin,length+1);
+    fileName[length] = '\0';
+    return fileName;
+}
+
+const utf8 * allocStringWithoutPrefix(const utf8 *originalString, const utf8 *prefixToRemove) {
+    const utf8 *begin, *ptr, *prefix;
+    assert( originalString!=NULL && prefixToRemove!=NULL );
+    
+    ptr = begin = originalString;
+    prefix      = prefixToRemove;
+    while (*ptr==*prefix) { ++ptr; ++prefix; }
+    if (*prefix=='\0') { begin=ptr; }
+    return strdup(begin);
+}

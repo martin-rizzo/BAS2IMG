@@ -52,11 +52,14 @@ const utf8 * strblend(utf8 *buffer, const utf8 *message, const utf8 *str);
  */
 long getFileSize(FILE *file);
 
+
 const utf8 * allocConcatenation(const utf8 *firstString, const utf8 *secondString);
 
+const utf8 * allocFilePath(const utf8* originalFilePath, const utf8* newExtension, ExtensionMethod method);
 
-const utf8* allocFilePath(const utf8* originalFilePath, const utf8* newExtension, ExtensionMethod method);
+const utf8 * allocFileNameWithoutExtension(const utf8 *originalFilePath);
 
+const utf8 * allocStringWithoutPrefix(const utf8 *string, const utf8 *prefixToRemove);
 
 
 #endif /* bas2img_helpers_h */
