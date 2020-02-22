@@ -4,8 +4,9 @@ RM = rm -f
 BIN_DIR  = ../bin
 
 ## files ##
-HEADERS        = bas2img.h helpers.h error.h import.h export.h font.h bmp.h gif.h
-OBJECTS        = bas2img helpers error import export font font__msx font__msx-din bmp
+HEADERS        = bas2img.h types.h helpers.h error.h import.h export.h font.h bmp.h gif.h
+FONTS          = font__atari.h font__msx.h font__msx-din.h
+OBJECTS        = bas2img helpers error import export font bmp
 TARGET_RELEASE = $(BIN_DIR)/bas2img
 TARGET_DEBUG   = $(BIN_DIR)/bas2img_d
 
@@ -32,11 +33,11 @@ all: debug
 #
 debug: $(TARGET_DEBUG)
 
-$(TARGET_DEBUG): $(OBJS_DEBUG) $(HEADERS)
-	$(CC) $(CONFIG_DEBUG)  -o $@  $(OBJS_DEBUG)
+$(TARGET_DEBUG): $(OBJS_DEBUG)
+	$(CC) $(CONFIG_DEBUG)  -o $@  $^
 
 
-%_d.o: %.c
+%_d.o: %.c $(HEADERS) $(FONTS)
 	$(CC) -c $(CFLAGS) $(CONFIG_DEBUG)  -o $@  $<
 
 
@@ -46,10 +47,10 @@ $(TARGET_DEBUG): $(OBJS_DEBUG) $(HEADERS)
 #
 release: $(TARGET_RELEASE)
 
-$(TARGET_RELEASE): $(OBJS_RELEASE) $(HEADERS)
-	$(CC) $(CONFIG_RELEASE)  -o $@  $(OBJS_RELEASE)
+$(TARGET_RELEASE): $(OBJS_RELEASE)
+	$(CC) $(CONFIG_RELEASE)  -o $@  $^
 
-%_r.o: %.c
+%_r.o: %.c $(HEADERS) $(FONTS)
 	$(CC) -c $(CFLAGS) $(CONFIG_RELEASE)  -o $@  $<
 
 
