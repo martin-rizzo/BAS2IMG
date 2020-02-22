@@ -113,10 +113,10 @@ Bool setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors) 
 }
 
 Bool extractBmpHeader(BmpHeader *header, const void* data, long dataSize) {
-    const char *ptr;
+    const Byte *ptr;
     assert( header!=NULL && data!=NULL && dataSize>0 );
     
-    ptr = (const char*)data;
+    ptr = (Byte*)data;
     if (dataSize<54)                   { return FALSE; }
     if (ptr[0]!=0x42 || ptr[1]!=0x4D ) { return FALSE; }
     header->fileType        = getInt16(ptr);
