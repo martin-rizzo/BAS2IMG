@@ -182,8 +182,8 @@ Bool writeCArrayFromImage(const utf8  *outputFilePath,
     /* add extensions (when appropiate) */
     imageFilePath = allocFilePath(imageFilePath, ".bmp", OPTIONAL_EXTENSION);
     /* get the path to the output file */
-    if (outputFilePath) { outputFilePath = allocFilePath(outputFilePath,".c",OPTIONAL_EXTENSION); }
-    else                { outputFilePath = allocFilePath(imageFilePath ,".c",FORCED_EXTENSION  ); }
+    if (outputFilePath) { outputFilePath = allocFilePath(outputFilePath,".h",OPTIONAL_EXTENSION); }
+    else                { outputFilePath = allocFilePath(imageFilePath ,".h",FORCED_EXTENSION  ); }
     /* get the font name */
     outputName = allocFileNameWithoutExtension(outputFilePath);
     fontName   = allocStringWithoutPrefix(outputName,"font__");
