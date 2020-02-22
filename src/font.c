@@ -32,10 +32,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "font.h"
+#include "font__atari.h"
 #include "font__msx.h"
 #include "font__msx-din.h"
 
-static const Font *theFonts[] = { &msx, &msx_din, 0 };
+static const Font *theFonts[] = { &atari, &msx, &msx_din, 0 };
 
 
 /**

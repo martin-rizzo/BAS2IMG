@@ -17,6 +17,7 @@
 		5B77D85523FE1374007C7085 /* error.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D85423FE1374007C7085 /* error.c */; };
 		5B77D85823FE15FF007C7085 /* import.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D85623FE15FF007C7085 /* import.c */; };
 		5B77D85A23FE1884007C7085 /* font.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D85923FE1884007C7085 /* font.c */; };
+		5BE419762400BDA9000D141D /* font__atari.h in Sources */ = {isa = PBXBuildFile; fileRef = 5BE419752400BDA8000D141D /* font__atari.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -53,6 +54,7 @@
 		5B77D85923FE1884007C7085 /* font.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = font.c; sourceTree = "<group>"; };
 		5B77D85B23FE1F6E007C7085 /* types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
 		5BD0E30623F871850013F982 /* bas2img */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bas2img; sourceTree = BUILT_PRODUCTS_DIR; };
+		5BE419752400BDA8000D141D /* font__atari.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = font__atari.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +84,7 @@
 				5B77D84D23FE0C7B007C7085 /* export.c */,
 				5B6BA56C23FB541D00C0671F /* font.h */,
 				5B77D85923FE1884007C7085 /* font.c */,
+				5BE419752400BDA8000D141D /* font__atari.h */,
 				5B6BA56823FB540C00C0671F /* font__msx.h */,
 				5B6BA56923FB540D00C0671F /* font__msx-din.h */,
 				5B23CDA923FC3FD100C628E5 /* bmp.h */,
@@ -172,6 +175,7 @@
 				5B77D85223FE0F0F007C7085 /* helpers.c in Sources */,
 				5B0F006123F872AD00A1D6D1 /* bas2img.c in Sources */,
 				5B77D85523FE1374007C7085 /* error.c in Sources */,
+				5BE419762400BDA9000D141D /* font__atari.h in Sources */,
 				5B23CDAE23FC3FD200C628E5 /* gif.c in Sources */,
 				5B23CDAD23FC3FD200C628E5 /* bmp.c in Sources */,
 				5B77D84E23FE0C7B007C7085 /* export.c in Sources */,
