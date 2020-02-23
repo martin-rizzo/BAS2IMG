@@ -52,6 +52,13 @@ const utf8 * strblend(utf8 *buffer, const utf8 *message, const utf8 *str);
  */
 long getFileSize(FILE *file);
 
+/**
+ * Returns the file extension corresponding to the image format
+ */
+const utf8 * getImageExtension(ImageFormat imageFormat);
+
+
+
 
 const utf8 * allocConcatenation(const utf8 *firstString, const utf8 *secondString);
 

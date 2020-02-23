@@ -76,6 +76,18 @@ long getFileSize(FILE *file) {
     return fileSize;
 }
 
+/**
+ * Returns the file extension corresponding to the image format
+ */
+const utf8 * getImageExtension(ImageFormat imageFormat) {
+    switch(imageFormat) {
+        case BMP: return ".bmp";
+        case GIF: return ".gif";
+        default:  return ".nil";
+    }
+}
+
+
 
 const utf8 * allocConcatenation(const utf8 *firstString, const utf8 *secondString) {
     utf8 *string;
