@@ -34,12 +34,19 @@
 #include "types.h"
 
 
-
-
 /**
- * Returns the information of the font that match with the provided name
+ * Returns information of the font that match with the provided name
+ * @param name  The name of the searched font
+ * @returns     A 'Font' structure with the information or NULL if the font cannot be found
  */
 const Font * getFont(const utf8 *name);
+
+/**
+ * Returns information of the computer that match with the provided name
+ * @param name  The name of the searched computer
+ * @returns     A 'Computer' structure with the information or NULL if the computer cannot be found
+ */
+const Computer * getComputer(const utf8 *name);
 
 
 /**

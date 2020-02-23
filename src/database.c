@@ -78,13 +78,20 @@ static const Computer *theComputers[] = {
 #pragma mark - > ACCESSING DATA
 
 /**
- * Returns the information of the font that match with the provided name
+ * Returns information of the font that match with the provided name
+ * @param name  The name of the searched font
+ * @returns     A 'Font' structure with the information or NULL if the font cannot be found
  */
 const Font * getFont(const utf8 *name) {
     int i=0; while ( theFonts[i] && strcmp(theFonts[i]->name,name)!=0 ) { ++i; }
     return theFonts[i];
 }
 
+/**
+ * Returns information of the computer that match with the provided name
+ * @param name  The name of the searched computer
+ * @returns     A 'Computer' structure with the information or NULL if the computer cannot be found
+ */
 const Computer * getComputer(const utf8 *name) {
     int i=0; while ( theComputers[i] && strcmp(theComputers[i]->name,name)!=0 ) { ++i; }
     return theComputers[i];
