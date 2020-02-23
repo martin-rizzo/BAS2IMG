@@ -37,12 +37,12 @@
 /**
  * Creates a C code representing an array containing the font image
  *
- * @param outputFilePath The path to the file where the generated C code will be written (NULL = use image name)
+ * @param outputFilePath The path to the file where the generated C code will be written (NULL = use the image name)
  * @param imageFilePath  The path to the input image
  * @param imageFormat    The format of the input image (only BMP format is supported)
  * @param orientation    The order of characters in the image (vertical slices, horizontal slices)
  */
-Bool writeCArrayFromImage(const utf8  *outputFilePath,
+Bool importArrayFromImage(const utf8  *outputFilePath,
                           const utf8  *imageFilePath,
                           ImageFormat  imageFormat,
                           Orientation  orientation);

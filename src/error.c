@@ -61,24 +61,29 @@ Bool printErrorMessage(void) {
     const utf8 *message; Error* error=&theError;
     utf8 *buffer = NULL;
     switch (error->id) {
-        case SUCCESS:                message = "SUCCESS"; break;
-        case ERR_UNKNOWN_PARAM:      message = "unknown parameter '$'"; break;
-        case ERR_FILE_NOT_FOUND:     message = "file '$' cannot be found"; break;
-        case ERR_FILE_TOO_LARGE:     message = "file '$' is too large"; break;
-        case ERR_FILE_TOO_SMALL:     message = "file '$' is too small"; break;
-        case ERR_CANNOT_CREATE_FILE: message = "file '$' cannot be created"; break;
-        case ERR_CANNOT_READ_FILE:   message = "file '$' cannot be accessed"; break;
-        case ERR_CANNOT_WRITE_FILE:  message = "file '$' cannot be written"; break;
-        case ERR_NOT_ENOUGH_MEMORY:  message = "not enough memory"; break;
-        case ERR_GIF_NOT_SUPPORTED:  message = "GIF format isn't supported yet"; break;
-        case ERR_FILE_IS_NOT_BMP:    message = "file '$' is not a BMP file"; break;
-        case ERR_BMP_MUST_BE_128PX:  message = "image in '$' must have a size of exactly 128 by 128 pixels"; break;
-        case ERR_BMP_MUST_BE_1BIT:   message = "image in '$' must be 1 bit per pixel monochrome bitmap"; break;
+        case SUCCESS:                  message = "SUCCESS"; break;
+        case ERR_UNKNOWN_PARAM:        message = "unknown parameter '$'"; break;
+        case ERR_FILE_NOT_FOUND:       message = "file '$' cannot be found"; break;
+        case ERR_FILE_TOO_LARGE:       message = "file '$' is too large"; break;
+        case ERR_FILE_TOO_SMALL:       message = "file '$' is too small"; break;
+        case ERR_CANNOT_CREATE_FILE:   message = "file '$' cannot be created"; break;
+        case ERR_CANNOT_READ_FILE:     message = "file '$' cannot be accessed"; break;
+        case ERR_CANNOT_WRITE_FILE:    message = "file '$' cannot be written"; break;
+        case ERR_NOT_ENOUGH_MEMORY:    message = "not enough memory"; break;
+        case ERR_GIF_NOT_SUPPORTED:    message = "GIF format isn't supported yet"; break;
+        case ERR_FILE_IS_NOT_BMP:      message = "file '$' is not a BMP file"; break;
+        case ERR_BMP_MUST_BE_128PX:    message = "image in '$' must have a size of exactly 128 by 128 pixels"; break;
+        case ERR_BMP_MUST_BE_1BIT:     message = "image in '$' must be 1 bit per pixel monochrome bitmap"; break;
         case ERR_BMP_UNSUPPORTED_FORMAT: message = "the BMP format in '$' is not supported by BAS2IMG"; break;
-        case ERR_BMP_INVALID_FORMAT: message = "file '$' has a wrong BMP format or is corrupt"; break;
-        case ERR_NONEXISTENT_FONT:   message = "The font '$' does not exist. Use the '--list-fonts' option for a list of available fonts."; break;
-        case ERR_INTERNAL_ERROR:     message = "Internal error (?)"; break;
-        default:                     message = "unknown error"; break;
+        case ERR_BMP_INVALID_FORMAT:   message = "file '$' has a wrong BMP format or is corrupt"; break;
+        case ERR_NONEXISTENT_FONT:     message = "The font '$' does not exist. Use the '--list-fonts' option for a list of available fonts."; break;
+        case ERR_NONEXISTENT_COMPUTER: message = "The computer '$' is not supported. Use the '--list-computers' option for a list of available computers."; break;
+        case ERR_MISSING_BAS_PATH:     message = "Missing BASIC program filename"; break;
+        case ERR_MISSING_FONTIMG_PATH: message = "Missing font image filename"; break;
+        case ERR_MISSING_FONT_NAME:    message = "Missing font name. Use the '-list-fonts' option for a list of available fonts."; break;
+        case ERR_MISSING_COMPUTER_NAME:message = "Missing computer name. Use the '-list-computers' option for a list of available computers."; break;
+        case ERR_INTERNAL_ERROR:       message = "Internal error (?)"; break;
+        default:                       message = "unknown error"; break;
     }
     if (error->str)  {
         buffer  = malloc(strlen(message)+strlen(error->str)+1);

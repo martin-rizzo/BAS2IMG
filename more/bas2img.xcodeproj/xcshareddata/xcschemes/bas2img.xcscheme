@@ -66,6 +66,10 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--list-fonts"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "-c msx demons.bas"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -166,7 +166,7 @@ static Bool writeCArrayFromBitmapFile(FILE       *outputFile,
  * @param imageFormat    The format of the input image (only BMP format is supported)
  * @param orientation    The order of characters in the image (vertical slices, horizontal slices)
  */
-Bool writeCArrayFromImage(const utf8  *outputFilePath,
+Bool importArrayFromImage(const utf8  *outputFilePath,
                           const utf8  *imageFilePath,
                           ImageFormat  imageFormat,
                           Orientation  orientation)
@@ -181,7 +181,7 @@ Bool writeCArrayFromImage(const utf8  *outputFilePath,
     
     /* add extensions (when appropiate) */
     imageFilePath = allocFilePath(imageFilePath, ".bmp", OPTIONAL_EXTENSION);
-    /* get the path to the output file */
+    /* make the path to the output file */
     if (outputFilePath) { outputFilePath = allocFilePath(outputFilePath,".h",OPTIONAL_EXTENSION); }
     else                { outputFilePath = allocFilePath(imageFilePath ,".h",FORCED_EXTENSION  ); }
     /* get the font name */

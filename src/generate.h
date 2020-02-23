@@ -1,6 +1,6 @@
 /**
- * @file       types.h
- * @date       Feb 15, 2020
+ * @file       generate.h
+ * @date       Feb 22, 2020
  * @author     Martin Rizzo | <martinrizzo@gmail.com>
  * @copyright  Copyright (c) 2020 Martin Rizzo.
  *             This project is released under the MIT License.
@@ -29,52 +29,26 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#ifndef bas2img_types_h
-#define bas2img_types_h
-
-/* generic simple types */
-
-typedef unsigned char Byte;               /* < Byte (size=8bits)                                */
-typedef          char utf8;               /* < unicode variable width character encoding        */
-typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean                                          */
-
-/* bas2img simple types */
-
-typedef enum ImageFormat { BMP, GIF             } ImageFormat;
-typedef enum Orientation { HORIZONTAL, VERTICAL } Orientation;
+#ifndef bas2img_generate_h
+#define bas2img_generate_h
+#include "types.h"
 
 
-/* bas2img more complex types */
-
-typedef Bool (*IsDecodableFunc)(const Byte *sour, int sourLen);
-typedef Bool (*DecodeFunc)(Byte **inout_dest, const Byte **inout_sour, int sourLen);
-
-typedef struct Font {
-    const char *name;
-    const char *description;
-    unsigned char data[2048];
-} Font;
-
-typedef struct Decoder {
-    const char      *name;
-    const char      *description;
-    IsDecodableFunc isDecodable;
-    DecodeFunc      decode;
-    
-} Decoder;
-
-typedef struct Computer {
-    const char    *name;
-    const char    *description;
-    const Decoder *decoder;
-    const Font    *font;
-} Computer;
-
-typedef struct Config {
-    int margin;
-    int padding;
-} Config;
+/**
+ * Generates an image displaying the source code of the provided BASIC program
+ *
+ * @param imageFilePath  The path to the output image
+ * @param imageFormat    The format of the output image (only BMP format is supported)
+ * @param basFilePath    The path to the BASIC program used as input
+ * @param computer       The computer for which to process the BASIC program
+ * @param config         The configuration used to generate the image
+ */
+Bool generateImageFromBASIC(const utf8     *imageFilePath,
+                            ImageFormat    imageFormat,
+                            Orientation    orientation,
+                            const utf8     *basFilePath,
+                            const Computer *computer,
+                            const Config   *config);
 
 
-#endif /* bas2img_types_h */
-
+#endif /* bas2img_generate_h */

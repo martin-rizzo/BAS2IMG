@@ -21,6 +21,7 @@
 		5BE419922401DA58000D141D /* f-atari.c in Sources */ = {isa = PBXBuildFile; fileRef = 5BE4198F2401DA58000D141D /* f-atari.c */; };
 		5BE419932401DA58000D141D /* f-msx.c in Sources */ = {isa = PBXBuildFile; fileRef = 5BE419902401DA58000D141D /* f-msx.c */; };
 		5BE419942401DA58000D141D /* f-msxdin.c in Sources */ = {isa = PBXBuildFile; fileRef = 5BE419912401DA58000D141D /* f-msxdin.c */; };
+		5BE4199724020F25000D141D /* generate.c in Sources */ = {isa = PBXBuildFile; fileRef = 5BE4199524020F24000D141D /* generate.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -61,6 +62,8 @@
 		5BE4198F2401DA58000D141D /* f-atari.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "f-atari.c"; sourceTree = "<group>"; };
 		5BE419902401DA58000D141D /* f-msx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "f-msx.c"; sourceTree = "<group>"; };
 		5BE419912401DA58000D141D /* f-msxdin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "f-msxdin.c"; sourceTree = "<group>"; };
+		5BE4199524020F24000D141D /* generate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = generate.c; sourceTree = "<group>"; };
+		5BE4199624020F25000D141D /* generate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = generate.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +91,8 @@
 				5B77D85423FE1374007C7085 /* error.c */,
 				5BE419782401A2F3000D141D /* database.h */,
 				5BE419772401A2F3000D141D /* database.c */,
+				5BE4199624020F25000D141D /* generate.h */,
+				5BE4199524020F24000D141D /* generate.c */,
 				5B77D85723FE15FF007C7085 /* import.h */,
 				5B77D85623FE15FF007C7085 /* import.c */,
 				5B77D84C23FE0C7B007C7085 /* export.h */,
@@ -202,6 +207,7 @@
 				5B77D85223FE0F0F007C7085 /* helpers.c in Sources */,
 				5B0F006123F872AD00A1D6D1 /* bas2img.c in Sources */,
 				5BE4198C2401DA4B000D141D /* d-msxasc.c in Sources */,
+				5BE4199724020F25000D141D /* generate.c in Sources */,
 				5BE4198E2401DA4B000D141D /* d-msx.c in Sources */,
 				5B77D85523FE1374007C7085 /* error.c in Sources */,
 				5BE419932401DA58000D141D /* f-msx.c in Sources */,

@@ -37,6 +37,7 @@
 #include "helpers.h"
 #include "error.h"
 #include "database.h"
+#include "generate.h"
 #include "import.h"
 #include "export.h"
 #include "bmp.h"
@@ -71,14 +72,16 @@ static const utf8 * firstValid(const utf8 *name1, const utf8 *name2, const utf8 
 
 
 int main(int argc, char* argv[]) {
-    int i; const Font *font;
+    int i; const Font *font; const Computer *computer; Config config;
     Bool printHelpAndExit      = FALSE;
     Bool printVersionAndExit   = FALSE;
     Bool fullListing           = TRUE;
     Mode        mode           = GENERATE_IMAGE;
     ImageFormat imageFormat    = BMP;
     Orientation orientation    = HORIZONTAL;
-    const utf8 *inputFileName  = NULL;
+    const utf8 *inputFilePath  = NULL;
+    const utf8 *imageFilePath  = NULL;
+    const utf8 *basFilePath    = NULL;
     const utf8 *computerName   = NULL;
     const utf8 *fontName       = NULL;
     const utf8 *param;
@@ -101,7 +104,7 @@ int main(int argc, char* argv[]) {
 
     /* process all parameters */
     for (i=1; i<argc; ++i) { param=argv[i];
-        if      ( param[0]!='-' ) { inputFileName=param; }
+        if      ( param[0]!='-' ) { inputFilePath=param; }
         else if ( isOption(param,"-c","--computer"   ) ) { computerName=getOptionCfg(&i,argc,argv);    }
         else if ( isOption(param,"-l","--list"       ) ) { mode=LIST_COMPUTERS; fullListing=FALSE; }
         else if ( isOption(param,"-L","--list-all"   ) ) { mode=LIST_COMPUTERS; fullListing=TRUE;  }
@@ -111,7 +114,7 @@ int main(int argc, char* argv[]) {
         else if ( isOption(param,"-H","--horizontal" ) ) { orientation=HORIZONTAL;   }
         else if ( isOption(param,"-V","--vertical"   ) ) { orientation=VERTICAL;     }
         else if ( isOption(param,"-X","--export-font") ) { mode=EXPORT_FONT; fontName=getOptionCfg(&i,argc,argv); }
-        else if ( isOption(param,"-@","--import-font") ) { mode=IMPORT_FONT; fontName=getOptionCfg(&i,argc,argv); }
+        else if ( isOption(param,"-@","--import-font") ) { mode=IMPORT_FONT; imageFilePath=getOptionCfg(&i,argc,argv); }
         else if ( isOption(param,"-h","--help"       ) ) { printHelpAndExit=TRUE;    }
         else if ( isOption(param,"-v","--version"    ) ) { printVersionAndExit=TRUE; }
         else    { err2(ERR_UNKNOWN_PARAM,param); printErrorMessage(); return 0; }
@@ -137,19 +140,27 @@ int main(int argc, char* argv[]) {
             break;
             
         case IMPORT_FONT:
-            fontName = firstValid( fontName, inputFileName, NULL );
-            writeCArrayFromImage(NULL, fontName, imageFormat, orientation);
+            imageFilePath = firstValid( imageFilePath, inputFilePath, NULL );
+            if (!imageFilePath) { err2(ERR_MISSING_FONTIMG_PATH,0); break; }
+            importArrayFromImage(NULL, imageFilePath, imageFormat, orientation);
             break;
             
         case EXPORT_FONT:
-            fontName = firstValid( fontName, inputFileName, NULL );
-            font     = getFont(fontName);
-            if (!font) { return err2(ERR_NONEXISTENT_FONT,fontName); }
-            else       { exportFont(font,orientation);               }
+            fontName = firstValid( fontName, inputFilePath, NULL );
+            if (!fontName) { err2(ERR_MISSING_FONT_NAME,0); break; }
+            font = getFont(fontName);
+            if (!font) { err2(ERR_NONEXISTENT_FONT,fontName); break; }
+            exportFont(font,orientation);
             break;
             
         case GENERATE_IMAGE:
-            printf("generate image operation is not implemented yet.\n");
+            computerName = firstValid( computerName, "msx", NULL );
+            if (!computerName) { err2(ERR_MISSING_COMPUTER_NAME,0); break;}
+            computer = getComputer(computerName);
+            if (!computer) { err2(ERR_NONEXISTENT_COMPUTER,computerName); break; }
+            basFilePath = firstValid( basFilePath, inputFilePath, NULL );
+            if (!basFilePath) { err2(ERR_MISSING_BAS_PATH,0); break; }
+            generateImageFromBASIC(NULL, imageFormat, orientation,  basFilePath, computer, &config);
             break;
     }
     return printErrorMessage();
