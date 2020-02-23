@@ -37,13 +37,18 @@
 #include "helpers.h"
 
 
-Error theError = { SUCCESS, NULL };
+Error theError = { ERR_NO_ERROR, NULL };
 
-Bool err2(ErrorID errorID, const utf8 *str) {
+/**
+ * Reports a fatal error
+ * @param errorID  The error identifier, ex: ERR_CANNOT_READ_FILE
+ * @param str      The optional text attached to the error report (it can be NULL)
+ */
+Bool error(ErrorID errorID, const utf8 *str) {
     free((void*)theError.str);
     theError.id  = errorID;
     theError.str = str ? strdup(str) : NULL;
-    return errorID==SUCCESS;
+    return errorID==ERR_NO_ERROR;
 }
 
 #define isRunning() (theError.id==SUCCESS)
@@ -61,7 +66,7 @@ Bool printErrorMessage(void) {
     const utf8 *message; Error* error=&theError;
     utf8 *buffer = NULL;
     switch (error->id) {
-        case SUCCESS:                  message = "SUCCESS"; break;
+        case ERR_NO_ERROR:             message = "SUCCESS"; break;
         case ERR_UNKNOWN_PARAM:        message = "unknown parameter '$'"; break;
         case ERR_FILE_NOT_FOUND:       message = "file '$' cannot be found"; break;
         case ERR_FILE_TOO_LARGE:       message = "file '$' is too large"; break;

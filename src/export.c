@@ -93,18 +93,18 @@ static Bool exportFontToBmpFile(FILE         *outputFile,
     BmpHeader bmp; Byte* pixelData = NULL;
     static const Byte colorTable[] = { 255,255,255,0,  0,0,0,0 };
     
-    if (isRunning()) { /* 1) set bmp header */
+    if (success) { /* 1) set bmp header */
         if (!setBmpHeader(&bmp, FONT_IMG_WIDTH, FONT_IMG_HEIGHT, FONT_IMG_NUMOFCOLORS))
-        { err(ERR_INTERNAL_ERROR); }
+        { error(ERR_INTERNAL_ERROR,0); }
     }
-    if (isRunning()) { /* 2) copy font to an image-buffer and write it into file */
+    if (success) { /* 2) copy font to an image-buffer and write it into file */
         pixelData = malloc(bmp.pixelDataSize);
         exportFontToImageBuffer(pixelData, bmp.pixelDataSize, -bmp.scanlineSize, orientation, font);
         if (!fwriteBmp(&bmp, colorTable, sizeof(colorTable), pixelData, bmp.pixelDataSize, outputFile))
-        { err2(ERR_CANNOT_WRITE_FILE,outputFilePath); }
+        { error(ERR_CANNOT_WRITE_FILE,outputFilePath); }
     }
     free(pixelData);
-    return isRunning();
+    return success ? TRUE : FALSE;
 }
     
 /**
@@ -120,16 +120,16 @@ Bool exportFont(const Font *font, Orientation orientation) {
     assert( font!=NULL );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
 
-    if (isRunning()) {
+    if (success) {
         outputFileName = allocConcatenation(FONT_IMG_PREFIX, font->name);
         outputFilePath = allocFilePath(outputFileName, ".bmp", FORCED_EXTENSION);
-        if (!outputFileName || !outputFileName) { err(ERR_NOT_ENOUGH_MEMORY); }
+        if (!outputFileName || !outputFileName) { error(ERR_NOT_ENOUGH_MEMORY,0); }
     }
-    if (isRunning()) {
+    if (success) {
         outputFile = fopen(outputFilePath, "wb");
-        if (!outputFile) { err2(ERR_CANNOT_CREATE_FILE,outputFilePath); }
+        if (!outputFile) { error(ERR_CANNOT_CREATE_FILE,outputFilePath); }
     }
-    if (isRunning()) {
+    if (success) {
         printf("Exporting font %s to file '%s'", font->name, outputFilePath);
         exportFontToBmpFile(outputFile, outputFilePath, orientation, font);
     }
@@ -137,6 +137,6 @@ Bool exportFont(const Font *font, Orientation orientation) {
     if (outputFile) { fclose(outputFile); }
     free((void*)outputFilePath);
     free((void*)outputFileName);
-    return isRunning();
+    return success ? TRUE : FALSE;
 }
 

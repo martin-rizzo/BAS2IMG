@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
         else if ( isOption(param,"-@","--import-font") ) { mode=IMPORT_FONT; imageFilePath=getOptionCfg(&i,argc,argv); }
         else if ( isOption(param,"-h","--help"       ) ) { printHelpAndExit=TRUE;    }
         else if ( isOption(param,"-v","--version"    ) ) { printVersionAndExit=TRUE; }
-        else    { err2(ERR_UNKNOWN_PARAM,param); printErrorMessage(); return 0; }
+        else    { error(ERR_UNKNOWN_PARAM,param); printErrorMessage(); return 0; }
     }
     
     if ( printHelpAndExit ) {
@@ -141,25 +141,25 @@ int main(int argc, char* argv[]) {
             
         case IMPORT_FONT:
             imageFilePath = firstValid( imageFilePath, inputFilePath, NULL );
-            if (!imageFilePath) { err2(ERR_MISSING_FONTIMG_PATH,0); break; }
+            if (!imageFilePath) { error(ERR_MISSING_FONTIMG_PATH,0); break; }
             importArrayFromImage(NULL, imageFilePath, imageFormat, orientation);
             break;
             
         case EXPORT_FONT:
             fontName = firstValid( fontName, inputFilePath, NULL );
-            if (!fontName) { err2(ERR_MISSING_FONT_NAME,0); break; }
+            if (!fontName) { error(ERR_MISSING_FONT_NAME,0); break; }
             font = getFont(fontName);
-            if (!font) { err2(ERR_NONEXISTENT_FONT,fontName); break; }
+            if (!font) { error(ERR_NONEXISTENT_FONT,fontName); break; }
             exportFont(font,orientation);
             break;
             
         case GENERATE_IMAGE:
             computerName = firstValid( computerName, "msx", NULL );
-            if (!computerName) { err2(ERR_MISSING_COMPUTER_NAME,0); break;}
+            if (!computerName) { error(ERR_MISSING_COMPUTER_NAME,0); break;}
             computer = getComputer(computerName);
-            if (!computer) { err2(ERR_NONEXISTENT_COMPUTER,computerName); break; }
+            if (!computer) { error(ERR_NONEXISTENT_COMPUTER,computerName); break; }
             basFilePath = firstValid( basFilePath, inputFilePath, NULL );
-            if (!basFilePath) { err2(ERR_MISSING_BAS_PATH,0); break; }
+            if (!basFilePath) { error(ERR_MISSING_BAS_PATH,0); break; }
             generateImageFromBASIC(NULL, imageFormat, orientation,  basFilePath, computer, &config);
             break;
     }

@@ -60,7 +60,7 @@ Bool generateImageFromBASIC(const utf8     *imageFilePath,
     
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
     assert( basFilePath!=NULL && computer!=NULL && config!=NULL );
-    if (imageFormat==GIF) { return err(ERR_GIF_NOT_SUPPORTED); }
+    if (imageFormat==GIF) { return error(ERR_GIF_NOT_SUPPORTED,0); }
     
     /* add extensions (when appropiate) */
     basFilePath = allocFilePath(basFilePath, ".bas", OPTIONAL_EXTENSION);
@@ -68,22 +68,22 @@ Bool generateImageFromBASIC(const utf8     *imageFilePath,
     if (imageFilePath) { imageFilePath = allocFilePath(imageFilePath,imageExtension,OPTIONAL_EXTENSION); }
     else               { imageFilePath = allocFilePath(basFilePath  ,imageExtension,FORCED_EXTENSION  ); }
     
-    if (isRunning()) {
+    if (success) {
         basFile = fopen(basFilePath,"rb");
-        if (!basFile) { err2(ERR_FILE_NOT_FOUND,basFilePath); }
+        if (!basFile) { error(ERR_FILE_NOT_FOUND,basFilePath); }
     }
-    if (isRunning()) {
+    if (success) {
         basFileSize = getFileSize(basFile);
-        if (basFileSize<MIN_FILE_SIZE) { err2(ERR_FILE_TOO_SMALL,basFilePath); }
-        if (basFileSize>MAX_FILE_SIZE) { err2(ERR_FILE_TOO_LARGE,basFilePath); }
+        if (basFileSize<MIN_FILE_SIZE) { error(ERR_FILE_TOO_SMALL,basFilePath); }
+        if (basFileSize>MAX_FILE_SIZE) { error(ERR_FILE_TOO_LARGE,basFilePath); }
     }
-    if (isRunning()) {
+    if (success) {
         imageFile = fopen(imageFilePath,"wb");
-        if (!imageFile) { err2(ERR_CANNOT_CREATE_FILE,imageFilePath); }
+        if (!imageFile) { error(ERR_CANNOT_CREATE_FILE,imageFilePath); }
     }
-    if (isRunning()) {
+    if (success) {
         printf("Generating the image '%s' containing the source code of %s\n", imageFilePath, basFilePath);
-        /* generate( imageFile, basFile, basFileSize, basFilePath, ) */
+        /* generate( imageFile, imageFormat, orientation, basFile, basFileSize, computer, config) */
         
     }
     /* clean up and return */
@@ -91,5 +91,5 @@ Bool generateImageFromBASIC(const utf8     *imageFilePath,
     if (imageFile    ) { fclose(imageFile); }
     if (basFilePath  ) { free((void*)basFilePath  ); }
     if (imageFilePath) { free((void*)imageFilePath); }
-    return isRunning();
+    return success ? TRUE : FALSE;
 }

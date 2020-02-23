@@ -124,38 +124,37 @@ static Bool writeCArrayFromBitmapFile(FILE       *outputFile,
     assert( arrayName!=NULL && strlen(arrayName)>0 );
     assert( imageFile!=NULL && imageFileSize>0 && imageFilePath!=NULL );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
-    assert( isRunning() );
     
-    if (isRunning()) { /* 1) allocate space to load the complete file to memory */
+    if (success) { /* 1) allocate space to load the complete file to memory */
         imageBuffer = malloc(imageFileSize);
-        if (!imageBuffer) { err(ERR_NOT_ENOUGH_MEMORY); }
+        if (!imageBuffer) { error(ERR_NOT_ENOUGH_MEMORY,0); }
     }
-    if (isRunning()) { /* 2) load the file */
+    if (success) { /* 2) load the file */
         if ( imageFileSize!=fread(imageBuffer,1,imageFileSize,imageFile) ) {
-            err2(ERR_CANNOT_READ_FILE,imageFilePath);
+            error(ERR_CANNOT_READ_FILE,imageFilePath);
         }
     }
-    if (isRunning()) { /* 3) extract bitmap header */
-        if (!extractBmpHeader(&bmp, imageBuffer, imageFileSize)) { err(ERR_FILE_IS_NOT_BMP); }
+    if (success) { /* 3) extract bitmap header */
+        if (!extractBmpHeader(&bmp, imageBuffer, imageFileSize)) { error(ERR_FILE_IS_NOT_BMP,0); }
     }
-    if (isRunning()) { /* 4) verify correct bitmap format */
+    if (success) { /* 4) verify correct bitmap format */
         pixelDataSize    = (unsigned)imageFileSize-bmp.pixelDataOffset;
         requiredDataSize = (requiredWidth/8)*requiredHeight;
-        if      (bmp.fileType     !=0x4D42         ) { err2(ERR_FILE_IS_NOT_BMP       ,imageFilePath); }
-        else if (bmp.fileSize     !=imageFileSize  ) { err2(ERR_BMP_INVALID_FORMAT    ,imageFilePath); }
-        else if (bmp.imageWidth   !=FONT_IMG_WIDTH ) { err2(ERR_BMP_MUST_BE_128PX     ,imageFilePath); }
-        else if (bmp.imageHeight  !=FONT_IMG_HEIGHT) { err2(ERR_BMP_MUST_BE_128PX     ,imageFilePath); }
-        else if (bmp.planes       !=1              ) { err2(ERR_BMP_INVALID_FORMAT    ,imageFilePath); }
-        else if (bmp.bitsPerPixel !=1              ) { err2(ERR_BMP_MUST_BE_1BIT      ,imageFilePath); }
-        else if (bmp.compression  !=0              ) { err2(ERR_BMP_UNSUPPORTED_FORMAT,imageFilePath); }
-        else if (pixelDataSize    <requiredDataSize) { err2(ERR_BMP_INVALID_FORMAT    ,imageFilePath); }
+        if      (bmp.fileType     !=0x4D42         ) { error(ERR_FILE_IS_NOT_BMP       ,imageFilePath); }
+        else if (bmp.fileSize     !=imageFileSize  ) { error(ERR_BMP_INVALID_FORMAT    ,imageFilePath); }
+        else if (bmp.imageWidth   !=FONT_IMG_WIDTH ) { error(ERR_BMP_MUST_BE_128PX     ,imageFilePath); }
+        else if (bmp.imageHeight  !=FONT_IMG_HEIGHT) { error(ERR_BMP_MUST_BE_128PX     ,imageFilePath); }
+        else if (bmp.planes       !=1              ) { error(ERR_BMP_INVALID_FORMAT    ,imageFilePath); }
+        else if (bmp.bitsPerPixel !=1              ) { error(ERR_BMP_MUST_BE_1BIT      ,imageFilePath); }
+        else if (bmp.compression  !=0              ) { error(ERR_BMP_UNSUPPORTED_FORMAT,imageFilePath); }
+        else if (pixelDataSize    <requiredDataSize) { error(ERR_BMP_INVALID_FORMAT    ,imageFilePath); }
     }
-    if (isRunning()) { /* 5) write the C array to the output file */
+    if (success) { /* 5) write the C array to the output file */
         writeCArrayFromImageBuffer(outputFile, arrayName,
                                    &imageBuffer[bmp.pixelDataOffset], -bmp.scanlineSize, orientation);
     }
     free(imageBuffer);
-    return isRunning();
+    return success ? TRUE : FALSE;
 }
 
 /**
@@ -176,8 +175,7 @@ Bool importArrayFromImage(const utf8  *outputFilePath,
     assert( imageFilePath!=NULL );
     assert( imageFormat==BMP || imageFormat==GIF );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
-    assert( isRunning() );
-    if (imageFormat==GIF) { return err(ERR_GIF_NOT_SUPPORTED); }
+    if (imageFormat==GIF) { return error(ERR_GIF_NOT_SUPPORTED,0); }
     
     /* add extensions (when appropiate) */
     imageFilePath = allocFilePath(imageFilePath, ".bmp", OPTIONAL_EXTENSION);
@@ -188,20 +186,20 @@ Bool importArrayFromImage(const utf8  *outputFilePath,
     outputName = allocFileNameWithoutExtension(outputFilePath);
     fontName   = allocStringWithoutPrefix(outputName,"font__");
     
-    if (isRunning()) { /* 1) open image file for reading */
+    if (success) { /* 1) open image file for reading */
         imageFile = fopen(imageFilePath,"rb");
-        if (!imageFile) { err2(ERR_FILE_NOT_FOUND,imageFilePath); }
+        if (!imageFile) { error(ERR_FILE_NOT_FOUND,imageFilePath); }
     }
-    if (isRunning()) { /* 2) get size of the image file and verify it is valid */
+    if (success) { /* 2) get size of the image file and verify it is valid */
         imageFileSize = getFileSize(imageFile);
-        if (imageFileSize<MIN_FILE_SIZE) { err2(ERR_FILE_TOO_SMALL,imageFilePath); }
-        if (imageFileSize>MAX_FILE_SIZE) { err2(ERR_FILE_TOO_LARGE,imageFilePath); }
+        if (imageFileSize<MIN_FILE_SIZE) { error(ERR_FILE_TOO_SMALL,imageFilePath); }
+        if (imageFileSize>MAX_FILE_SIZE) { error(ERR_FILE_TOO_LARGE,imageFilePath); }
     }
-    if (isRunning()) { /* 3) open header file for writing */
+    if (success) { /* 3) open header file for writing */
         outputFile = fopen(outputFilePath,"w");
-        if (!outputFile) { err2(ERR_CANNOT_CREATE_FILE,outputFilePath); }
+        if (!outputFile) { error(ERR_CANNOT_CREATE_FILE,outputFilePath); }
     }
-    if (isRunning()) { /* 4) proceed! */
+    if (success) { /* 4) proceed! */
         printf("Creating source code for '%s' font in file: %s\n", fontName, outputFilePath);
         writeCArrayFromBitmapFile(outputFile,fontName,imageFile,imageFileSize,imageFilePath,orientation);
     }
@@ -212,6 +210,6 @@ Bool importArrayFromImage(const utf8  *outputFilePath,
     if (outputName    ) { free((void*)outputName    ); outputName    =NULL; }
     if (imageFilePath ) { free((void*)imageFilePath ); imageFilePath =NULL; }
     if (outputFilePath) { free((void*)outputFilePath); outputFilePath=NULL; }
-    return isRunning();
+    return success ? TRUE : FALSE;
 }
 

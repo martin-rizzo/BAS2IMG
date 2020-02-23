@@ -36,7 +36,7 @@
 
 /* supported errors */
 typedef enum ErrorID {
-    SUCCESS=0, ERR_UNKNOWN_PARAM, ERR_FILE_NOT_FOUND, ERR_FILE_TOO_LARGE, ERR_FILE_TOO_SMALL,
+    ERR_NO_ERROR=0, ERR_UNKNOWN_PARAM, ERR_FILE_NOT_FOUND, ERR_FILE_TOO_LARGE, ERR_FILE_TOO_SMALL,
     ERR_CANNOT_CREATE_FILE, ERR_CANNOT_READ_FILE, ERR_CANNOT_WRITE_FILE, ERR_NOT_ENOUGH_MEMORY,
     ERR_GIF_NOT_SUPPORTED, ERR_FILE_IS_NOT_BMP, ERR_BMP_MUST_BE_128PX, ERR_BMP_MUST_BE_1BIT,
     ERR_BMP_UNSUPPORTED_FORMAT, ERR_BMP_INVALID_FORMAT, ERR_NONEXISTENT_FONT, ERR_NONEXISTENT_COMPUTER,
@@ -48,11 +48,20 @@ typedef struct Error { ErrorID id; const utf8 *str; } Error;
 
 extern Error theError;
 
-#define isRunning() (theError.id==SUCCESS)
 
-#define err(id) err2(id,NULL);
+/**
+ * Global var that indicates whether BAS2IMG is being successfully executed.
+ * It is TRUE while no error is reported.
+ */
+#define success (theError.id==ERR_NO_ERROR)
 
-Bool err2(ErrorID errorID, const utf8 *str);
+/**
+ * Reports a fatal error
+ * @param errorID  The error identifier, ex: ERR_CANNOT_READ_FILE
+ * @param str      The optional text attached to the error report (it can be NULL)
+ */
+Bool error(ErrorID errorID, const utf8 *str);
+
 
 Bool printErrorMessage(void);
 
