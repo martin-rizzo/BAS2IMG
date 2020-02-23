@@ -46,8 +46,8 @@ typedef enum Orientation { HORIZONTAL, VERTICAL } Orientation;
 
 /* bas2img more complex types */
 
-typedef Bool (*IsDecodableFunc)(Byte *data, int numberOfBytes);
-typedef Bool (*DecodeFunc)(Byte **inout_destPtr, Byte **inout_sourPtr);
+typedef Bool (*IsDecodableFunc)(const Byte *sour, int sourLen);
+typedef Bool (*DecodeFunc)(Byte **inout_dest, const Byte **inout_sour, int sourLen);
 
 typedef struct Font {
     const char *name;

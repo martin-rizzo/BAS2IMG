@@ -38,11 +38,11 @@
 
 extern Font font_atari;
 extern Font font_msx;
-extern Font font_msx_din;
+extern Font font_msxdin;
 static const Font *theFonts[] = {
     &font_atari,
     &font_msx,
-    &font_msx_din,
+    &font_msxdin,
     NULL
 };
 
@@ -52,11 +52,11 @@ static const Font *theFonts[] = {
 
 extern Decoder decoder_atari;
 extern Decoder decoder_msx;
-extern Decoder decoder_msx_asc;
+extern Decoder decoder_msxasc;
 static const Decoder *theDecoders[] = {
     &decoder_atari,
     &decoder_msx,
-    &decoder_msx_asc,
+    &decoder_msxasc,
     NULL
 };
 
