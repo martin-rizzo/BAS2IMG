@@ -38,58 +38,105 @@
 #include "error.h"
 #include "database.h"
 
+Bool generateImageFromLines(void) {
+    return FALSE;
+}
+
+
+static Bool generateImageFromBasicBuffer(FILE           *imageFile,
+                                         ImageFormat    imageFormat,
+                                         Orientation    orientation,
+                                         const Byte     *basicBuffer,
+                                         long           basicBufferSize,
+                                         const Computer *computer,
+                                         const Config   *config
+                                         ) {
+    
+    /*
+    int i;
+    Line **lines = NULL;
+    
+    lines = allocLinesFromBasicBuffer( basicBuffer, basicBufferSize, computer->decoder );
+    for ( i=0 ; line[i] ; ++i ) {
+        printf("line %d len=%d\n", i,lines[i].length);
+    }
+    
+    
+    / clean up and return /
+    if (lines) { freeLines(lines); }
+    */
+    return success ? TRUE : FALSE;
+}
+
+
 
 /**
  * Generates an image displaying the source code of the provided BASIC program
  *
  * @param imageFilePath  The path to the output image (NULL = use the BASIC program name)
  * @param imageFormat    The format of the output image (only BMP format is supported)
- * @param basFilePath    The path to the BASIC program used as input
+ * @param basicFilePath  The path to the BASIC program used as input
  * @param computer       The computer for which to process the BASIC program
  * @param config         The configuration used to generate the image
  */
 Bool generateImageFromBASIC(const utf8     *imageFilePath,
                             ImageFormat    imageFormat,
                             Orientation    orientation,
-                            const utf8     *basFilePath,
+                            const utf8     *basicFilePath,
                             const Computer *computer,
                             const Config   *config)
 {
-    const utf8 * const imageExtension = getImageExtension(imageFormat);
-    FILE *imageFile=NULL, *basFile=NULL; long basFileSize=0;
+    const utf8 * imageExtension;
+    FILE *imageFile=NULL, *basicFile=NULL;
+    Byte *basicBuffer=NULL; long basicBufferSize=0;
     
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
-    assert( basFilePath!=NULL && computer!=NULL && config!=NULL );
+    assert( basicFilePath!=NULL && computer!=NULL && config!=NULL );
     if (imageFormat==GIF) { return error(ERR_GIF_NOT_SUPPORTED,0); }
     
     /* add extensions (when appropiate) */
-    basFilePath = allocFilePath(basFilePath, ".bas", OPTIONAL_EXTENSION);
-    /* make the path to the image file */
-    if (imageFilePath) { imageFilePath = allocFilePath(imageFilePath,imageExtension,OPTIONAL_EXTENSION); }
-    else               { imageFilePath = allocFilePath(basFilePath  ,imageExtension,FORCED_EXTENSION  ); }
+    basicFilePath = allocFilePath(basicFilePath, ".bas", OPTIONAL_EXTENSION);
     
-    if (success) {
-        basFile = fopen(basFilePath,"rb");
-        if (!basFile) { error(ERR_FILE_NOT_FOUND,basFilePath); }
+    /* make the path to the image file */
+    imageExtension = getImageExtension(imageFormat);
+    if (imageFilePath) { imageFilePath = allocFilePath(imageFilePath,imageExtension,OPTIONAL_EXTENSION); }
+    else               { imageFilePath = allocFilePath(basicFilePath,imageExtension,FORCED_EXTENSION  ); }
+    
+    /*-------------------------------------------------------------------*/
+
+    if (success) { /* 1) open BASIC file for reading */
+        basicFile = fopen(basicFilePath,"rb");
+        if (!basicFile) { error(ERR_FILE_NOT_FOUND,basicFilePath); }
     }
-    if (success) {
-        basFileSize = getFileSize(basFile);
-        if (basFileSize<MIN_FILE_SIZE) { error(ERR_FILE_TOO_SMALL,basFilePath); }
-        if (basFileSize>MAX_FILE_SIZE) { error(ERR_FILE_TOO_LARGE,basFilePath); }
+    if (success) { /* 2) get size of the BASIC file and verify it is valid */
+        basicBufferSize = getFileSize(basicFile);
+        if (basicBufferSize<MIN_FILE_SIZE) { error(ERR_FILE_TOO_SMALL,basicFilePath); }
+        if (basicBufferSize>MAX_FILE_SIZE) { error(ERR_FILE_TOO_LARGE,basicFilePath); }
     }
-    if (success) {
+    if (success) { /* 3) allocate space to load the complete BASIC file to memory */
+        basicBuffer = malloc(basicBufferSize);
+        if (!basicBuffer) { error(ERR_NOT_ENOUGH_MEMORY,0); }
+    }
+    if (success) { /* 4) load the BASIC file */
+        if ( basicBufferSize!=fread(basicBuffer,1,basicBufferSize,basicFile) ) {
+            error(ERR_CANNOT_READ_FILE,basicFilePath);
+        }
+    }
+    if (success) { /* 5) open image file for writting */
         imageFile = fopen(imageFilePath,"wb");
         if (!imageFile) { error(ERR_CANNOT_CREATE_FILE,imageFilePath); }
     }
-    if (success) {
-        printf("Generating the image '%s' containing the source code of %s\n", imageFilePath, basFilePath);
-        /* generate( imageFile, imageFormat, orientation, basFile, basFileSize, computer, config) */
-        
+    if (success) { /* 6) proceed! */
+        printf("Generating the image '%s' containing the source code of %s\n", imageFilePath, basicFilePath);
+        generateImageFromBasicBuffer( imageFile, imageFormat, orientation, basicBuffer, basicBufferSize, computer, config);
     }
+    /*-------------------------------------------------------------------*/
+    
     /* clean up and return */
-    if (basFile      ) { fclose(basFile  ); }
+    if (basicBuffer  ) { free((void*)basicBuffer); }
+    if (basicFile    ) { fclose(basicFile); }
     if (imageFile    ) { fclose(imageFile); }
-    if (basFilePath  ) { free((void*)basFilePath  ); }
+    if (basicFilePath) { free((void*)basicFilePath); }
     if (imageFilePath) { free((void*)imageFilePath); }
     return success ? TRUE : FALSE;
 }
