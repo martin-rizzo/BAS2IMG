@@ -14,6 +14,7 @@
 		5B77D85223FE0F0F007C7085 /* helpers.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D85123FE0F0F007C7085 /* helpers.c */; };
 		5B77D85523FE1374007C7085 /* error.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D85423FE1374007C7085 /* error.c */; };
 		5B77D85823FE15FF007C7085 /* import.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D85623FE15FF007C7085 /* import.c */; };
+		5BD09F2A240450F500DF6D4D /* image.c in Sources */ = {isa = PBXBuildFile; fileRef = 5BD09F28240450F500DF6D4D /* image.c */; };
 		5BE419792401A2F3000D141D /* database.c in Sources */ = {isa = PBXBuildFile; fileRef = 5BE419772401A2F3000D141D /* database.c */; };
 		5BE4198C2401DA4B000D141D /* d-msxasc.c in Sources */ = {isa = PBXBuildFile; fileRef = 5BE419892401DA4B000D141D /* d-msxasc.c */; };
 		5BE4198D2401DA4B000D141D /* d-atari.c in Sources */ = {isa = PBXBuildFile; fileRef = 5BE4198A2401DA4B000D141D /* d-atari.c */; };
@@ -54,6 +55,8 @@
 		5B77D85623FE15FF007C7085 /* import.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = import.c; sourceTree = "<group>"; };
 		5B77D85723FE15FF007C7085 /* import.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = import.h; sourceTree = "<group>"; };
 		5B77D85B23FE1F6E007C7085 /* types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		5BD09F28240450F500DF6D4D /* image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = image.c; sourceTree = "<group>"; };
+		5BD09F29240450F500DF6D4D /* image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = image.h; sourceTree = "<group>"; };
 		5BD0E30623F871850013F982 /* bas2img */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bas2img; sourceTree = BUILT_PRODUCTS_DIR; };
 		5BE419772401A2F3000D141D /* database.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = database.c; sourceTree = "<group>"; };
 		5BE419782401A2F3000D141D /* database.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = database.h; sourceTree = "<group>"; };
@@ -92,6 +95,8 @@
 				5B77D85123FE0F0F007C7085 /* helpers.c */,
 				5B77D85323FE1374007C7085 /* error.h */,
 				5B77D85423FE1374007C7085 /* error.c */,
+				5BEBC7472403440200625A77 /* lines.h */,
+				5BEBC7462403440100625A77 /* lines.c */,
 				5BE419782401A2F3000D141D /* database.h */,
 				5BE419772401A2F3000D141D /* database.c */,
 				5BE4199624020F25000D141D /* generate.h */,
@@ -100,8 +105,8 @@
 				5B77D85623FE15FF007C7085 /* import.c */,
 				5B77D84C23FE0C7B007C7085 /* export.h */,
 				5B77D84D23FE0C7B007C7085 /* export.c */,
-				5BEBC7472403440200625A77 /* lines.h */,
-				5BEBC7462403440100625A77 /* lines.c */,
+				5BD09F29240450F500DF6D4D /* image.h */,
+				5BD09F28240450F500DF6D4D /* image.c */,
 				5B23CDA923FC3FD100C628E5 /* bmp.h */,
 				5B23CDAA23FC3FD200C628E5 /* bmp.c */,
 				5B23CDAC23FC3FD200C628E5 /* gif.h */,
@@ -213,6 +218,7 @@
 				5B77D85223FE0F0F007C7085 /* helpers.c in Sources */,
 				5B0F006123F872AD00A1D6D1 /* bas2img.c in Sources */,
 				5BE4198C2401DA4B000D141D /* d-msxasc.c in Sources */,
+				5BD09F2A240450F500DF6D4D /* image.c in Sources */,
 				5BE4199724020F25000D141D /* generate.c in Sources */,
 				5BE4198E2401DA4B000D141D /* d-msx.c in Sources */,
 				5B77D85523FE1374007C7085 /* error.c in Sources */,

@@ -38,9 +38,50 @@
 #include "error.h"
 #include "database.h"
 #include "lines.h"
+#include "image.h"
 
+#define NumberOfColors 256
 
-Bool generateImageFromLines(void) {
+static Bool generateImageFromLines(FILE           *imageFile,
+                                   ImageFormat    imageFormat,
+                                   Orientation    orientation,
+                                   const Lines    lines,
+                                   const Computer *computer,
+                                   const Config   *config
+                                   ) {
+    int width, height;
+    int x,y,i;
+    Image *image;
+    const Rgb black = { 0,0,0 };
+    const Rgb white = { 255,255,255 };
+
+    /*
+    for ( i=0 ; lines[i] ; ++i ) {
+        printf("line %d len=%d\n", i,lines[i]->length);
+    }
+    */
+    
+    width  = 256;
+    height = 256;
+    
+    image = allocImage(width,height);
+    setPaletteGradient(image, 0, black, 15, white);
+
+    x=64; y=64;
+    for (i=0; i<=15; ++i,x+=10) {
+        setColor(image,i);
+        fillRectangle(image,x,y,x+10,y+20);
+    }
+    
+    /*
+    setColor(image,15);
+    setFont(image,computer->font);
+    writeChar(image,40,40,'A');
+    */
+    
+    fwriteBmpImage(image,imageFile);
+    freeImage(image);
+    
     return FALSE;
 }
 
@@ -54,17 +95,17 @@ static Bool generateImageFromBasicBuffer(FILE           *imageFile,
                                          const Config   *config
                                          ) {
     
-    int i;
-    Lines lines = NULL;
+    Lines lines;
+    assert( imageFile!=NULL );
+    assert( orientation==HORIZONTAL || orientation==VERTICAL );
+    assert( basicBuffer!=NULL && basicBufferSize>0 );
+    assert( computer!=NULL && config!=NULL );
     
     lines = allocLinesFromBasicBuffer( basicBuffer, basicBufferSize, computer->decoder->decode );
-    for ( i=0 ; lines[i] ; ++i ) {
-        printf("line %d len=%d\n", i,lines[i]->length);
+    if (lines) {
+        generateImageFromLines(imageFile,imageFormat,orientation,lines,computer,config);
+        freeLines(lines);
     }
-    
-    
-    /* clean up and return */
-    if (lines) { freeLines(lines); }
     return success ? TRUE : FALSE;
 }
 
