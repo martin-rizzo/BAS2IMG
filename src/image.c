@@ -87,9 +87,9 @@ void setPaletteGradient(Image *image, int index0, Rgb rgb0, int index1, Rgb rgb1
     ptr = &image->colorTable[4*index0];
     for (i=0; i<=range; ++i) {
         t = i*256/range;
-        *ptr++ = lerp256(rgb0.r, rgb1.r, t);
-        *ptr++ = lerp256(rgb0.g, rgb1.g, t);
         *ptr++ = lerp256(rgb0.b, rgb1.b, t);
+        *ptr++ = lerp256(rgb0.g, rgb1.g, t);
+        *ptr++ = lerp256(rgb0.r, rgb1.r, t);
         *ptr++ = 0;
     }
 }
