@@ -45,4 +45,10 @@ Lines allocLinesFromBasicBuffer(const Byte *basicBuffer,
 
 void freeLines(Lines lines);
 
+
+int getMaxLineLength(const Lines lines);
+
+int getNumberOfLines(const Lines lines);
+
+
 #endif /* bas2img_line_h */

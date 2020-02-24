@@ -125,3 +125,22 @@ void freeLines(Lines lines) {
     }
 }
 
+
+
+int getMaxLineLength(const Lines lines) {
+    int i, maxLength=0;
+    assert( lines!=NULL );
+    
+    for (i=0; lines[i]; ++i) {
+        if ( lines[i]->length > maxLength ) { maxLength = lines[i]->length; }
+    }
+    return maxLength;
+}
+
+int getNumberOfLines(const Lines lines) {
+    int i;
+    assert( lines!=NULL );
+    
+    i=0; while (lines[i]) { ++i; }
+    return i;
+}
