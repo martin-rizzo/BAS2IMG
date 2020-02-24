@@ -49,6 +49,10 @@ typedef enum Orientation { HORIZONTAL, VERTICAL } Orientation;
 typedef Bool (*IsDecodableFunc)(const Byte *sour, int sourLen);
 typedef Bool (*DecodeFunc)(Byte **inout_dest, const Byte **inout_sour, int sourLen);
 
+typedef struct Rgb {
+    Byte r,g,b;
+} Rgb;
+
 typedef struct Font {
     const char *name;
     const char *description;
