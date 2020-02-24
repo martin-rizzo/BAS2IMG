@@ -65,7 +65,7 @@ static const Decoder *theDecoders[] = {
 #pragma mark - > THE COMPUTERS
 
 static const Computer computer_atari = { "atari", "Atari 8bits", &decoder_atari, &font_atari };
-static const Computer computer_msx   = { "msx", "MSX", &decoder_msx, &font_msx };
+static const Computer computer_msx   = { "msx", "MSX", &decoder_msxasc, &font_msx };
 
 static const Computer *theComputers[] = {
     &computer_atari,

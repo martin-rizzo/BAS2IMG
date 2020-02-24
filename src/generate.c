@@ -37,6 +37,8 @@
 #include "helpers.h"
 #include "error.h"
 #include "database.h"
+#include "lines.h"
+
 
 Bool generateImageFromLines(void) {
     return FALSE;
@@ -52,19 +54,17 @@ static Bool generateImageFromBasicBuffer(FILE           *imageFile,
                                          const Config   *config
                                          ) {
     
-    /*
     int i;
-    Line **lines = NULL;
+    Lines lines = NULL;
     
-    lines = allocLinesFromBasicBuffer( basicBuffer, basicBufferSize, computer->decoder );
-    for ( i=0 ; line[i] ; ++i ) {
-        printf("line %d len=%d\n", i,lines[i].length);
+    lines = allocLinesFromBasicBuffer( basicBuffer, basicBufferSize, computer->decoder->decode );
+    for ( i=0 ; lines[i] ; ++i ) {
+        printf("line %d len=%d\n", i,lines[i]->length);
     }
     
     
-    / clean up and return /
+    /* clean up and return */
     if (lines) { freeLines(lines); }
-    */
     return success ? TRUE : FALSE;
 }
 

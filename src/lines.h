@@ -1,6 +1,6 @@
 /**
- * @file       bas2img.h
- * @date       Feb 15, 2020
+ * @file       lines.h
+ * @date       Feb 22, 2020
  * @author     Martin Rizzo | <martinrizzo@gmail.com>
  * @copyright  Copyright (c) 2020 Martin Rizzo.
  *             This project is released under the MIT License.
@@ -29,21 +29,20 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#ifndef bas2img_h
-#define bas2img_h
+#ifndef bas2img_line_h
+#define bas2img_line_h
+#include "types.h"
 
-
-#define MIN_FILE_SIZE        (0)           /* < minimum size for loadable files (in bytes)  */
-#define MAX_FILE_SIZE        (1024L*1024L) /* < maximum size for loadable files (in bytes)  */
-#define MAX_LINE_LENGTH      512           /* < maximum number of chars in a line of code   */
-#define CHAR_IMG_WIDTH       8             /* < the width of each character (in pixels)     */
-#define CHAR_IMG_HEIGHT      8             /* < the height of each character (in pixels)    */
-#define FONT_IMG_WIDTH       128           /* < the font image width (in pixels)            */
-#define FONT_IMG_HEIGHT      128           /* < the font image height (in pixels)           */
-#define FONT_IMG_NUMOFCOLORS 2             /* < the number of colors of font images         */
-#define FONT_IMG_PREFIX      "font__"      /* < prefix used when exporting fonts            */
-#define isOption(param,opname1,opname2)   (strcmp(param,opname1)==0 || strcmp(param,opname2)==0)
+typedef struct SingleLine { int length; Byte bytes[1]; } SingleLine;
+typedef SingleLine    *SingleLinePtr;
+typedef SingleLinePtr *Lines;
 
 
 
-#endif /* bas2img_h */
+Lines allocLinesFromBasicBuffer(const Byte *basicBuffer,
+                                long       basicBufferSize,
+                                DecodeFunc decodeFunc);
+
+void freeLines(Lines lines);
+
+#endif /* bas2img_line_h */

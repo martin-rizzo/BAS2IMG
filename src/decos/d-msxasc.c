@@ -33,9 +33,10 @@
 #include <stdlib.h>
 #include "../types.h"
 
-#define LF       0x0A  /* line feed          */
-#define CR       0x0D  /* carriage return    */
-#define EXTENDED 0x01  /* extended character */
+#define LF       0x0A  /* line feed             */
+#define CR       0x0D  /* carriage return       */
+#define EXTENDED 0x01  /* extended character    */
+#define EOF      0x1A  /* end of file character */
 
 /**
  * Returns TRUE if the provided file content is decodable by this decoder
@@ -71,7 +72,10 @@ static Bool decode(Byte **inout_dest, const Byte **inout_sour, int sourLen) {
         else                        { *dest++=*sour++; }
     }
     /* when only left 1 character to decode in the source buffer */
-    else { if (*sour==LF || *sour==CR || *sour==EXTENDED) { ++sour; } else { *dest++=*sour++; } }
+    else {
+        if (*sour==EOF || *sour==LF || *sour==CR || *sour==EXTENDED ) { ++sour; }
+        else { *dest++=*sour++; }
+    }
     
     
     (*inout_dest) = dest;
