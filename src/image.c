@@ -37,6 +37,8 @@
 
 #define swap(a,b) temp=a; a=b; b=temp
 #define lerp256(v0, v1, t) ( ((256-t)*v0 + t*v1) / 256 )
+#define CHARWIDTH  8
+#define CHARHEIGHT 8
 
 
 /**
@@ -106,7 +108,25 @@ void setFont(Image *image, const Font *font) {
 }
 
 void putChar(Image *image, int x, int y, int chIndex) {
+    const Byte *sour;
+    Byte *dest;
+    int i, j, segment, mask, color, scanlineSize;
     assert( image!=NULL );
+    
+    if (!image->curFont) { return; }
+    
+    scanlineSize = image->scanlineSize;
+    sour         = &image->curFont->data[chIndex*CHARHEIGHT];
+    dest         = &image->pixelData[y*scanlineSize + x];
+    color        = image->curColor;
+    for (j=0; j<CHARHEIGHT; ++j) {
+        segment=*sour++; mask=0x80;
+        for (i=0; i<CHARWIDTH; ++i) {
+            if (segment&mask) { *dest=color; }
+            ++dest; mask>>=1;
+        }
+        dest += (scanlineSize - CHARWIDTH);
+    }
 }
 
 void fillRectangle(Image *image, int left, int top, int right, int bottom) {
@@ -141,7 +161,7 @@ void fillRectangle(Image *image, int left, int top, int right, int bottom) {
 
 Bool fwriteBmpImage(Image *image, FILE *file) {
     BmpHeader header;
-    setBmpHeader(&header, image->width, image->height, 256);
+    setBmpHeader(&header, image->width, -image->height, 256);
     return fwriteBmp(&header, image->colorTable, image->colorTableSize, image->pixelData, image->pixelDataSize, file);
 }
 
