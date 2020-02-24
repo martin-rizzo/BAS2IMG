@@ -101,8 +101,8 @@ Bool setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors) 
     const int scanlineSize   = getScanlineSize(width, bitsPerPixels);
     const int colorTableSize = 4 * numberOfColors;
     const int pixelDataSize  = scanlineSize * height;
-    assert( width >0 );
-    assert( height>0 );
+    assert( width  >  0 );
+    assert( height != 0 );
     assert( numberOfColors==2 || numberOfColors==16 || numberOfColors==256 );
     
     header->fileType        = 0x4D42;
