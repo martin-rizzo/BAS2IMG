@@ -50,6 +50,7 @@ typedef struct BmpHeader {
     unsigned scanlineSize;
 } BmpHeader;
 
+unsigned getBmpScanlineSize(int width, int numberOfColors);
 
 Bool setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors);
 

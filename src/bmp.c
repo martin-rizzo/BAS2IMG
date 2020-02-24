@@ -87,6 +87,15 @@ static int fwriteBmpHeader(const BmpHeader *header, FILE *file) {
 /*=================================================================================================================*/
 #pragma mark - > EXTERN FUNCTIONS
 
+unsigned getBmpScanlineSize(int width, int numberOfColors) {
+    const int bitsPerPixel =
+    numberOfColors==  2 ? 1 :
+    numberOfColors== 16 ? 4 :
+    numberOfColors==256 ? 8 : 32;
+    assert( width>0 );
+    return getScanlineSize(width, bitsPerPixel);
+}
+
 Bool setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors) {
     const int bitsPerPixels  = numberOfColors==2 ? 1 : numberOfColors==16 ? 4 : 8;
     const int scanlineSize   = getScanlineSize(width, bitsPerPixels);
