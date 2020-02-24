@@ -50,9 +50,11 @@ static Bool generateImageFromLines(FILE           *imageFile,
                                    const Config   *config
                                    ) {
     int width, height;
-    int x,y,i;
+    int x,y,i, length;
+    const Byte *sour;
     Image *image;
     const Rgb black = { 0,0,0 };
+    const Rgb blue  = { 64,64,255 };
     const Rgb white = { 255,255,255 };
 
     /*
@@ -61,23 +63,29 @@ static Bool generateImageFromLines(FILE           *imageFile,
     }
     */
     
-    width  = 256;
-    height = 256;
+    width  = getMaxLineLength(lines)*CHAR_IMG_WIDTH;
+    height = getNumberOfLines(lines)*CHAR_IMG_HEIGHT;
+    image  = allocImage(width,height);
     
-    image = allocImage(width,height);
-    setPaletteGradient(image, 0, black, 15, white);
+    setPaletteGradient(image, 0,blue,   7,white);
+    setPaletteGradient(image, 8,white, 15,black);
 
-    x=64; y=64;
-    for (i=0; i<=15; ++i,x+=10) {
-        setColor(image,i);
-        fillRectangle(image,x,y,x+10,y+20);
+    /* Draw palette for testing
+     x=64; y=64;
+     for (i=0; i<=15; ++i,x+=10) { setColor(image,i); fillRectangle(image,x,y,x+10,y+20); }
+     */
+    
+    setColor(image,7);
+    setFont(image,computer->font);
+    y=0;
+    for (i=0; lines[i]; ++i) {
+        x      = 0;
+        sour   = lines[i]->bytes;
+        length = lines[i]->length;
+        while (length-->0) { putChar(image,x,y,*sour++); x+=CHAR_IMG_WIDTH; }
+        y+=CHAR_IMG_HEIGHT;
     }
     
-    /*
-    setColor(image,15);
-    setFont(image,computer->font);
-    writeChar(image,40,40,'A');
-    */
     
     fwriteBmpImage(image,imageFile);
     freeImage(image);
