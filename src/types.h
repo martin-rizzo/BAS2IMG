@@ -77,6 +77,8 @@ typedef struct Computer {
 typedef struct Config {
     int margin;
     int padding;
+    int charWidth;   /* < character width in pixels  (default 8) */
+    int charHeight;  /* < character height in pixels (default 8) */
 } Config;
 
 

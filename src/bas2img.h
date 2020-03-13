@@ -36,8 +36,8 @@
 #define MIN_FILE_SIZE        (0)           /* < minimum size for loadable files (in bytes)  */
 #define MAX_FILE_SIZE        (1024L*1024L) /* < maximum size for loadable files (in bytes)  */
 #define MAX_LINE_LENGTH      512           /* < maximum number of chars in a line of code   */
-#define CHAR_IMG_WIDTH       8             /* < the width of each character (in pixels)     */
-#define CHAR_IMG_HEIGHT      8             /* < the height of each character (in pixels)    */
+#define CHAR_IMG_WIDTH       8             /* < width  of each font character (in pixels)   */
+#define CHAR_IMG_HEIGHT      8             /* < height of each font character (in pixels)   */
 #define FONT_IMG_WIDTH       128           /* < the font image width (in pixels)            */
 #define FONT_IMG_HEIGHT      128           /* < the font image height (in pixels)           */
 #define FONT_IMG_NUMOFCOLORS 2             /* < the number of colors of font images         */

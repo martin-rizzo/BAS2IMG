@@ -93,6 +93,9 @@ int main(int argc, char* argv[]) {
         "    -f  --list-fonts      list all available computer fonts",
         "    -b  --bmp             generate BMP image (default)",
         "    -g  --gif             generate GIF image",
+        "    -6                    use 6 pixels wide characters",
+        "    -7                    use 7 pixels wide characters",
+        "    -8                    use 8 pixels wide characters (default)",
         "    -H  --horizontal      use horizontal orientation (default)",
         "    -V  --vertical        use vertical orientation",
         "    -X  --export-font     draw the computer font into the image",
@@ -101,6 +104,10 @@ int main(int argc, char* argv[]) {
         "    -v, --version         output version information and exit",
         NULL
     };
+    
+    /* default configuration */
+    config.charWidth  = 8;
+    config.charHeight = 8;
 
     /* process all parameters */
     for (i=1; i<argc; ++i) { param=argv[i];
@@ -111,6 +118,9 @@ int main(int argc, char* argv[]) {
         else if ( isOption(param,"-f","--list-fonts" ) ) { mode=LIST_FONTS;     fullListing=TRUE;  }
         else if ( isOption(param,"-b","--bmp"        ) ) { imageFormat=BMP;          }
         else if ( isOption(param,"-g","--gif"        ) ) { imageFormat=GIF;          }
+        else if ( isOption(param,"-6",""             ) ) { config.charWidth=6;       }
+        else if ( isOption(param,"-7",""             ) ) { config.charWidth=7;       }
+        else if ( isOption(param,"-8",""             ) ) { config.charWidth=8;       }
         else if ( isOption(param,"-H","--horizontal" ) ) { orientation=HORIZONTAL;   }
         else if ( isOption(param,"-V","--vertical"   ) ) { orientation=VERTICAL;     }
         else if ( isOption(param,"-X","--export-font") ) { mode=EXPORT_FONT; fontName=getOptionCfg(&i,argc,argv); }

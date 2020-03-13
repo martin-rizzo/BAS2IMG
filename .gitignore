@@ -1,5 +1,6 @@
 /bin/
-/src/*.o
+/src/**/*.o
 !/bin/README.md
+
 xcuserdata/
 .DS_Store

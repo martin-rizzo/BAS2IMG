@@ -63,8 +63,8 @@ static Bool generateImageFromLines(FILE           *imageFile,
     }
     */
     
-    width  = getMaxLineLength(lines)*CHAR_IMG_WIDTH;
-    height = getNumberOfLines(lines)*CHAR_IMG_HEIGHT;
+    width  = getMaxLineLength(lines) * config->charWidth;
+    height = getNumberOfLines(lines) * config->charHeight;
     image  = allocImage(width,height);
     
     setPaletteGradient(image, 0,blue,   7,white);
@@ -82,8 +82,10 @@ static Bool generateImageFromLines(FILE           *imageFile,
         x      = 0;
         sour   = lines[i]->bytes;
         length = lines[i]->length;
-        while (length-->0) { putChar(image,x,y,*sour++); x+=CHAR_IMG_WIDTH; }
-        y+=CHAR_IMG_HEIGHT;
+        while (length-->0) {
+            drawChar(image,x,y,config->charWidth,config->charHeight,*sour++);
+            x+=config->charWidth; }
+        y+=config->charHeight;
     }
     
     

@@ -35,7 +35,8 @@
 #include "image.h"
 #include "bmp.h"
 
-#define swap(a,b) temp=a; a=b; b=temp
+#define swap(a,b) temp=(a); (a)=(b); (b)=temp
+#define min(a,b)  ((a)<(b) ? (a) : (b))
 #define lerp256(v0, v1, t) ( ((256-t)*v0 + t*v1) / 256 )
 #define CHARWIDTH  8
 #define CHARHEIGHT 8
@@ -107,25 +108,36 @@ void setFont(Image *image, const Font *font) {
     image->curFont = font;
 }
 
-void putChar(Image *image, int x, int y, int chIndex) {
+/**
+ * Draws a character at specified position using the current color and font
+ * @param image      the image where the character will be drawn
+ * @param x          the X coordinate of the top-left corner of the ch
+ * @param y          the Y coordinate of the top-left corner
+ * @param maxWidth   maximum width available to draw the character
+ * @param maxHeight  maximum height available to draw the character
+ * @param charIndex  index of the character to draw (ex: 65 -> "A")
+ */
+void drawChar(Image *image, int x, int y, int maxWidth, int maxHeight, int charIndex) {
     const Byte *sour;
     Byte *dest;
     int i, j, segment, mask, color, scanlineSize;
+    const int charWidth  = min(maxWidth ,CHARWIDTH );
+    const int charHeight = min(maxHeight,CHARHEIGHT);
     assert( image!=NULL );
     
     if (!image->curFont) { return; }
     
     scanlineSize = image->scanlineSize;
-    sour         = &image->curFont->data[chIndex*CHARHEIGHT];
+    sour         = &image->curFont->data[charIndex*CHARHEIGHT];
     dest         = &image->pixelData[y*scanlineSize + x];
     color        = image->curColor;
-    for (j=0; j<CHARHEIGHT; ++j) {
+    for (j=0; j<charHeight; ++j) {
         segment=*sour++; mask=0x80;
-        for (i=0; i<CHARWIDTH; ++i) {
+        for (i=0; i<charWidth; ++i) {
             if (segment&mask) { *dest=color; }
             ++dest; mask>>=1;
         }
-        dest += (scanlineSize - CHARWIDTH);
+        dest += (scanlineSize - charWidth);
     }
 }
 

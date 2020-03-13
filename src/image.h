@@ -75,7 +75,16 @@ void setColor(Image *image, int color);
 
 void setFont(Image *image, const Font *font);
 
-void putChar(Image *image, int x, int y, int chIndex);
+/**
+ * Draws a character at specified position using the current color and font
+ * @param image      the image where the character will be drawn
+ * @param x          the X coordinate of the top-left corner of the ch
+ * @param y          the Y coordinate of the top-left corner
+ * @param maxWidth   maximum width available to draw the character
+ * @param maxHeight  maximum height available to draw the character
+ * @param charIndex  index of the character to draw (ex: 65 -> "A")
+ */
+void drawChar(Image *image, int x, int y, int width, int height, int chIndex);
 
 void fillRectangle(Image *image, int x0, int y0, int x1, int y1);
 
