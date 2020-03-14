@@ -32,6 +32,7 @@
 #ifndef bas2img_types_h
 #define bas2img_types_h
 
+
 /* generic simple types */
 
 typedef unsigned char Byte;               /* < Byte (size=8bits)                                */
@@ -46,8 +47,31 @@ typedef enum Orientation { HORIZONTAL, VERTICAL } Orientation;
 
 /* bas2img more complex types */
 
+/**
+ * Prototype of function used to verify if a stream of bytes can be decoded to BASIC lines
+ * @param sour     The source buffer containing the encoded BASIC program
+ * @param sourLen  The source buffer length in number of bytes
+ */
 typedef Bool (*IsDecodableFunc)(const Byte *sour, int sourLen);
+
+/**
+ * The smaller buffer size guaranteed when decoding BASIC lines
+ */
+#define MIN_DECODE_BUF_SIZE 32
+
+/**
+ * Prototype of function used to decode basic lines
+ *
+ * The destination buffer is guaranteed to have space for at least 32 bytes (MIN_DECODE_BUF_SIZE)
+ *
+ * @param inout_dest   The destination buffer where to store the decoded data.
+ * @param inout_sour   The source buffer with the content to decode
+ * @param sourLen      The source buffer length in number of bytes (always greater than zero)
+ */
 typedef Bool (*DecodeFunc)(Byte **inout_dest, const Byte **inout_sour, int sourLen);
+
+
+
 
 typedef struct Rgb {
     Byte r,g,b;
@@ -75,10 +99,13 @@ typedef struct Computer {
 } Computer;
 
 typedef struct Config {
-    int margin;
-    int padding;
-    int charWidth;   /* < character width in pixels  (default 8) */
-    int charHeight;  /* < character height in pixels (default 8) */
+    int  margin;
+    int  padding;
+    int  charWidth;     /* < character width in pixels  (default 8)        */
+    int  charHeight;    /* < character height in pixels (default 8)        */
+    int  lineWidth;     /* < maximum number of characters per line (0 = use the longest line length) */
+    Bool lineWrapping;  /* < TRUE = wraps lines that exceed the line width */
+    
 } Config;
 
 

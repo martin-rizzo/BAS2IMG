@@ -37,18 +37,18 @@
 #include "helpers.h"
 #include "error.h"
 #include "database.h"
-#include "lines.h"
+#include "rows.h"
 #include "image.h"
 
 #define NumberOfColors 256
 
-static Bool generateImageFromLines(FILE           *imageFile,
-                                   ImageFormat    imageFormat,
-                                   Orientation    orientation,
-                                   const Lines    lines,
-                                   const Computer *computer,
-                                   const Config   *config
-                                   ) {
+static Bool generateImageFromRows(FILE           *imageFile,
+                                  ImageFormat    imageFormat,
+                                  Orientation    orientation,
+                                  const Rows     rows,
+                                  const Computer *computer,
+                                  const Config   *config
+                                  ) {
     int width, height;
     int x,y,i, length;
     const Byte *sour;
@@ -63,8 +63,8 @@ static Bool generateImageFromLines(FILE           *imageFile,
     }
     */
     
-    width  = getMaxLineLength(lines) * config->charWidth;
-    height = getNumberOfLines(lines) * config->charHeight;
+    width  = getMaxRowLength(rows) * config->charWidth;
+    height = getNumberOfRows(rows) * config->charHeight;
     image  = allocImage(width,height);
     
     setPaletteGradient(image, 0,blue,   7,white);
@@ -78,10 +78,10 @@ static Bool generateImageFromLines(FILE           *imageFile,
     setColor(image,7);
     setFont(image,computer->font);
     y=0;
-    for (i=0; lines[i]; ++i) {
+    for (i=0; rows[i]; ++i) {
         x      = 0;
-        sour   = lines[i]->bytes;
-        length = lines[i]->length;
+        sour   = rows[i]->bytes;
+        length = rows[i]->length;
         while (length-->0) {
             drawChar(image,x,y,config->charWidth,config->charHeight,*sour++);
             x+=config->charWidth; }
@@ -105,16 +105,18 @@ static Bool generateImageFromBasicBuffer(FILE           *imageFile,
                                          const Config   *config
                                          ) {
     
-    Lines lines;
+    Rows rows; int wrapLength;
     assert( imageFile!=NULL );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
     assert( basicBuffer!=NULL && basicBufferSize>0 );
     assert( computer!=NULL && config!=NULL );
+    assert( config!=NULL );
     
-    lines = allocLinesFromBasicBuffer( basicBuffer, basicBufferSize, computer->decoder->decode );
-    if (lines) {
-        generateImageFromLines(imageFile,imageFormat,orientation,lines,computer,config);
-        freeLines(lines);
+    wrapLength = config->lineWrapping ? config->lineWidth : 0;
+    rows = allocRowsFromBasicBuffer( basicBuffer, basicBufferSize, wrapLength, computer->decoder->decode );
+    if (rows) {
+        generateImageFromRows(imageFile,imageFormat,orientation,rows,computer,config);
+        freeRows(rows);
     }
     return success ? TRUE : FALSE;
 }

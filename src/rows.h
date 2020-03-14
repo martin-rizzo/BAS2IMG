@@ -1,5 +1,5 @@
 /**
- * @file       lines.h
+ * @file       rows.h
  * @date       Feb 22, 2020
  * @author     Martin Rizzo | <martinrizzo@gmail.com>
  * @copyright  Copyright (c) 2020 Martin Rizzo.
@@ -29,26 +29,56 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#ifndef bas2img_line_h
-#define bas2img_line_h
+#ifndef bas2img_rows_h
+#define bas2img_rows_h
 #include "types.h"
 
-typedef struct SingleLine { int length; Byte bytes[1]; } SingleLine;
-typedef SingleLine    *SingleLinePtr;
-typedef SingleLinePtr *Lines;
+
+typedef struct SingleRow {
+    int  length;
+    Bool endOfLine;
+    Byte bytes[1];
+} SingleRow;
+
+/** A pointer to a SingleRow structure */
+typedef SingleRow    *SingleRowPtr;
+
+typedef SingleRowPtr *Rows;
 
 
 
-Lines allocLinesFromBasicBuffer(const Byte *basicBuffer,
-                                long       basicBufferSize,
-                                DecodeFunc decodeFunc);
+Rows allocRowsFromBasicBuffer(const Byte *basicBuffer,
+                              long        basicBufferSize,
+                              int         maximumRowLength,
+                              DecodeFunc  decodeFunc);
 
-void freeLines(Lines lines);
+void freeRows(Rows rows);
+
+/**
+ * Returns the length of the longest row
+ */
+int getMaxRowLength(const Rows rows);
+
+/**
+ * Returns the total number of rows
+ */
+int getNumberOfRows(const Rows rows);
+
+/**
+ * Returns the length of the longest line
+ *
+ * ATTENTION: a line can span several rows because wrapping can split long lines in multiple rows
+ * @param rows  A previously allocated array of rows of text containing the lines to search
+ */
+int getMaxLineLength_(const Rows rows);
+
+/**
+ * Returns the total number of lines
+ *
+ * ATTENTION: a line can span several rows because wrapping can split long lines in multiple rows
+ * @param rows  A previously allocated array of rows of text containing the lines to count
+ */
+int getNumberOfLines_(const Rows rows);
 
 
-int getMaxLineLength(const Lines lines);
-
-int getNumberOfLines(const Lines lines);
-
-
-#endif /* bas2img_line_h */
+#endif /* bas2img_rows_h */

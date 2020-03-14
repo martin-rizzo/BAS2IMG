@@ -53,6 +53,9 @@ typedef enum Mode { GENERATE_IMAGE, LIST_COMPUTERS, LIST_FONTS, EXPORT_FONT, IMP
 /*=================================================================================================================*/
 #pragma mark - > HELPER FUNCTIONS
 
+/**
+ * Returns the next argument in the array or empty string if there is not more arguments
+ */
 static const utf8 * getOptionCfg(int *inout_index, int argc, char* argv[]) {
     const int nexti = (*inout_index)+1; const utf8 *nextparam = "";
     if ( nexti<argc && argv[nexti][0]!='-' ) { (*inout_index)=nexti; nextparam=argv[nexti]; }
@@ -96,6 +99,7 @@ int main(int argc, char* argv[]) {
         "    -6                    use 6 pixels wide characters",
         "    -7                    use 7 pixels wide characters",
         "    -8                    use 8 pixels wide characters (default)",
+        "    -w  --width <n>       maximum number of character per line",
         "    -H  --horizontal      use horizontal orientation (default)",
         "    -V  --vertical        use vertical orientation",
         "    -X  --export-font     draw the computer font into the image",
@@ -106,8 +110,10 @@ int main(int argc, char* argv[]) {
     };
     
     /* default configuration */
-    config.charWidth  = 8;
-    config.charHeight = 8;
+    config.charWidth    = 8;
+    config.charHeight   = 8;
+    config.lineWidth    = 0;
+    config.lineWrapping = TRUE;
 
     /* process all parameters */
     for (i=1; i<argc; ++i) { param=argv[i];
@@ -121,6 +127,7 @@ int main(int argc, char* argv[]) {
         else if ( isOption(param,"-6",""             ) ) { config.charWidth=6;       }
         else if ( isOption(param,"-7",""             ) ) { config.charWidth=7;       }
         else if ( isOption(param,"-8",""             ) ) { config.charWidth=8;       }
+        else if ( isOption(param,"-w","--width"      ) ) { config.lineWidth=atoi(getOptionCfg(&i,argc,argv)); }
         else if ( isOption(param,"-H","--horizontal" ) ) { orientation=HORIZONTAL;   }
         else if ( isOption(param,"-V","--vertical"   ) ) { orientation=VERTICAL;     }
         else if ( isOption(param,"-X","--export-font") ) { mode=EXPORT_FONT; fontName=getOptionCfg(&i,argc,argv); }
