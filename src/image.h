@@ -84,7 +84,7 @@ void setFont(Image *image, const Font *font);
  * @param maxHeight  maximum height available to draw the character
  * @param charIndex  index of the character to draw (ex: 65 -> "A")
  */
-void drawChar(Image *image, int x, int y, int maxWidth, int maxHeight, int charIndex);
+void drawChar(Image *image, int x, int y, int maxWidth, int maxHeight, Char256 charIndex);
 
 void fillRectangle(Image *image, int x0, int y0, int x1, int y1);
 

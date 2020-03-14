@@ -35,9 +35,10 @@
 
 /* generic simple types */
 
-typedef unsigned char Byte;               /* < Byte (size=8bits)                                */
-typedef          char utf8;               /* < unicode variable width character encoding        */
-typedef int Bool; enum { FALSE=0, TRUE }; /* < Boolean                                          */
+typedef          char utf8;               /* < unicode variable width character encoding                        */
+typedef unsigned char Byte;               /* < a 8-bits unsigned value (0,255)                                  */
+typedef unsigned char Char256;            /* < one of 256 characters defined in the home computer character-set */
+typedef int Bool; enum { FALSE=0, TRUE }; /* < a boolean value (TRUE/FALSE)                                     */
 
 /* bas2img simple types */
 

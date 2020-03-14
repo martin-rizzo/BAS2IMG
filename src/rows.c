@@ -34,6 +34,7 @@
 #include <string.h>
 #include "bas2img.h"
 #include "rows.h"
+#define min(a,b)  ((a)<(b) ? (a) : (b))
 #define MAX_COLUMN (LINE_BUF_SIZE-MIN_DECODE_BUF_SIZE)
 
 /**
@@ -68,11 +69,15 @@ static Rows reallocRows(Rows rowsToRealloc, int numberOfRows) {
     return rows;
 }
 
-static SingleRowPtr allocSingleRow(const void* bytes, int numberOfBytes) {
-    SingleRowPtr row = malloc( sizeof(SingleRow) + numberOfBytes );
-    row->length    = numberOfBytes;
-    row->endOfLine = TRUE;
-    memcpy( row->bytes, bytes, numberOfBytes );
+static SingleRowPtr allocSingleRow(const Char256* chars, int numberOfChars, int wrapLength) {
+    SingleRowPtr row; Bool isEndOfLine=TRUE;
+    assert( chars!=NULL && numberOfChars>=0 );
+    
+    if (wrapLength>0 && numberOfChars>wrapLength) { numberOfChars=wrapLength; isEndOfLine=FALSE; }
+    row = malloc( sizeof(SingleRow) + numberOfChars*sizeof(Char256) );
+    row->length      = numberOfChars;
+    row->isEndOfLine = isEndOfLine;
+    memcpy( row->chars, chars, numberOfChars );
     return row;
 }
 
@@ -89,9 +94,9 @@ Rows allocRowsFromBasicBuffer(const Byte *basicBuffer,
     Rows rows;
     const Byte *sour, *sourEnd;
     Byte *dest;
-    Bool newline;
-    Byte lineBuffer[LINE_BUF_SIZE];
-    int column,rowIdx;
+    
+    Char256 lineBuffer[LINE_BUF_SIZE], *lineBufferPtr;
+    int column,rowIdx,numberOfChars; Bool newline;
     
     assert( basicBuffer!=NULL );
     assert( basicBufferSize>0 );
@@ -110,7 +115,15 @@ Rows allocRowsFromBasicBuffer(const Byte *basicBuffer,
             else                     { newline = TRUE; }
         }
         if (newline || dest>lineBuffer ) {
-            rows[rowIdx++] = allocSingleRow(lineBuffer, (int)(dest-lineBuffer));
+            /* copy the text line into the array of rows (wrapping the line when necessary) */
+            lineBufferPtr = lineBuffer;
+            numberOfChars = (int)(dest-lineBufferPtr);
+            do {
+                rows[rowIdx] = allocSingleRow(lineBufferPtr, numberOfChars, wrapLength);
+                lineBufferPtr += rows[rowIdx]->length;
+                numberOfChars -= rows[rowIdx]->length;
+                ++rowIdx;
+            } while (numberOfChars>0);
         }
     }
     return rows;
@@ -162,7 +175,7 @@ int getMaxLineLength_(const Rows rows) {
     
     for (i=0; rows[i]; ++i) {
         length=rows[i]->length;
-        while (!rows[i]->endOfLine && rows[++i]!=NULL) { length+=rows[i]->length; }
+        while (!rows[i]->isEndOfLine && rows[++i]!=NULL) { length+=rows[i]->length; }
         if (length>maxLength) { maxLength=length; }
     }
     return maxLength;
@@ -180,7 +193,7 @@ int getNumberOfLines_(const Rows rows) {
     
     numberOfLines=0;
     for (i=0; rows[i]; ++i) {
-        if (rows[i]->endOfLine || rows[i+1]==NULL) { ++numberOfLines; }
+        if (rows[i]->isEndOfLine || rows[i+1]==NULL) { ++numberOfLines; }
     }
     return numberOfLines;
 }

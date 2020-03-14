@@ -51,7 +51,7 @@ static Bool generateImageFromRows(FILE           *imageFile,
                                   ) {
     int width, height;
     int x,y,i, length;
-    const Byte *sour;
+    const Char256 *sour;
     Image *image;
     const Rgb black = { 0,0,0 };
     const Rgb blue  = { 64,64,255 };
@@ -80,7 +80,7 @@ static Bool generateImageFromRows(FILE           *imageFile,
     y=0;
     for (i=0; rows[i]; ++i) {
         x      = 0;
-        sour   = rows[i]->bytes;
+        sour   = rows[i]->chars;
         length = rows[i]->length;
         while (length-->0) {
             drawChar(image,x,y,config->charWidth,config->charHeight,*sour++);

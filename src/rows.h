@@ -35,9 +35,9 @@
 
 
 typedef struct SingleRow {
-    int  length;
-    Bool endOfLine;
-    Byte bytes[1];
+    int     length;
+    Bool    isEndOfLine;
+    Char256 chars[1];
 } SingleRow;
 
 /** A pointer to a SingleRow structure */
