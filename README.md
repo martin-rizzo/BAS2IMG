@@ -1,16 +1,19 @@
 BAS2IMG
 =======
 
-Description
------------
+**BAS2IMG** generates a image showing the listing of any BASIC program code.  
+The image is generated using the original home computer font. 
 
-**BAS2IMG** generates a image (.BMP or .GIF) showing the listing of any BASIC program code using the original home computer font. 
 
 Usage
 -----
 
+
+Examples
+--------
+
 ```
-  bas2img --computer msx game.bas
+  bas2img @msx program.bas
 ```
 
 
