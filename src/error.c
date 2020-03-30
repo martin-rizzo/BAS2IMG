@@ -78,8 +78,8 @@ Bool printErrorMessage(void) {
         case ERR_BMP_MUST_BE_1BIT:     message = "image in '$' must be 1 bit per pixel monochrome bitmap"; break;
         case ERR_BMP_UNSUPPORTED_FORMAT: message = "the BMP format in '$' is not supported by BAS2IMG"; break;
         case ERR_BMP_INVALID_FORMAT:   message = "file '$' has a wrong BMP format or is corrupt"; break;
-        case ERR_NONEXISTENT_FONT:     message = "The font '$' does not exist. Use the '--list-fonts' option for a list of available fonts."; break;
-        case ERR_NONEXISTENT_COMPUTER: message = "The computer '$' is not supported. Use the '--list-computers' option for a list of available computers."; break;
+        case ERR_NONEXISTENT_FONT:     message = "The font '$' does not exist. Use the 'list-fonts' command for a list of available fonts."; break;
+        case ERR_NONEXISTENT_COMPUTER: message = "The computer '$' is not supported. Use the 'list-computers' command for a list of available computers."; break;
         case ERR_MISSING_BAS_PATH:     message = "Missing BASIC program filename"; break;
         case ERR_MISSING_FONTIMG_PATH: message = "Missing font image filename"; break;
         case ERR_MISSING_FONT_NAME:    message = "Missing font name. Use the '-list-fonts' option for a list of available fonts."; break;
