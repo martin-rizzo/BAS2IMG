@@ -37,17 +37,12 @@
 /**
  * Generates an image displaying the source code of the provided BASIC program
  *
- * @param imageFilePath  The path to the output image
- * @param imageFormat    The format of the output image (only BMP format is supported)
- * @param basFilePath    The path to the BASIC program used as input
- * @param computer       The computer for which to process the BASIC program
+ * @param imageFilePath  The path to the output image (NULL = use the BASIC program name)
+ * @param basicFilePath  The path to the BASIC program used as input
  * @param config         The configuration used to generate the image
  */
 Bool generateImageFromBASIC(const utf8     *imageFilePath,
-                            ImageFormat    imageFormat,
-                            Orientation    orientation,
-                            const utf8     *basFilePath,
-                            const Computer *computer,
+                            const utf8     *basicFilePath,
                             const Config   *config);
 
 

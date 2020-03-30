@@ -33,6 +33,9 @@
 #include <string.h>
 #include "database.h"
 
+#define CHAR_8x8 8,8
+#define CHAR_6x8 6,8
+
 /*=================================================================================================================*/
 #pragma mark - > THE FONTS
 
@@ -64,8 +67,8 @@ static const Decoder *theDecoders[] = {
 /*=================================================================================================================*/
 #pragma mark - > THE COMPUTERS
 
-static const Computer computer_atari = { "atari", "Atari 8bits", &decoder_atari, &font_atari };
-static const Computer computer_msx   = { "msx", "MSX", &decoder_msxasc, &font_msx };
+static const Computer computer_atari = { "atari", "Atari 8bits", &decoder_atari,  &font_atari, CHAR_8x8 };
+static const Computer computer_msx   = { "msx",   "MSX",         &decoder_msxasc, &font_msx,   CHAR_6x8 };
 
 static const Computer *theComputers[] = {
     &computer_atari,

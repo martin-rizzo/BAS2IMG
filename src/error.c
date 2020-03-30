@@ -51,9 +51,6 @@ Bool error(ErrorID errorID, const utf8 *str) {
     return errorID==ERR_NO_ERROR;
 }
 
-#define isRunning() (theError.id==SUCCESS)
-
-#define err(id) err2(id,NULL);
 
 #ifdef NDEBUG
 #    define DLOG(x)

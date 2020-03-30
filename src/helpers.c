@@ -147,3 +147,13 @@ const utf8 * allocStringWithoutPrefix(const utf8 *originalString, const utf8 *pr
     if (*prefix=='\0') { begin=ptr; }
     return strdup(begin);
 }
+
+/**
+ * Returns the first positive value from the provided list of values
+ * @param value1   first value to check
+ * @param value2   second value to check
+ * @param value3   third value to check
+ */
+int firstPositiveValue(int value1, int value2, int value3) {
+    return value1>0 ? value1 : value2>0 ? value2 : value3>0 ? value3 : 0;
+}

@@ -46,12 +46,26 @@
 #define COPYRIGHT "Copyright (c) 2020 Martin Rizzo"
 
 
-typedef enum Mode { GENERATE_IMAGE, LIST_COMPUTERS, LIST_FONTS, EXPORT_FONT, IMPORT_FONT } Mode;
-
-
-
 /*=================================================================================================================*/
 #pragma mark - > HELPER FUNCTIONS
+
+/**
+ * Returns `TRUE` if param is equal to any of provided names
+ */
+#define isOption(param,nameToCheck1,nameToCheck2) \
+    (strcmp(param,nameToCheck1)==0 || strcmp(param,nameToCheck2)==0)
+
+/**
+ * Returns `TRUE` if command is equal to the provided name
+ */
+#define isCommand(command,nameToCheck) \
+    (strcmp(command,nameToCheck)==0)
+
+/**
+ * Returns the first character of the provided string
+ */
+#define firstChar(str) \
+    (str[0])
 
 /**
  * Returns the next argument in the array or empty string if there is not more arguments
@@ -62,124 +76,286 @@ static const utf8 * getOptionCfg(int *inout_index, int argc, char* argv[]) {
     return nextparam;
 }
 
-static const utf8 * firstValid(const utf8 *name1, const utf8 *name2, const utf8 *name3) {
-    if (name1!=NULL && name1[0]!='\0') { return name1; }
-    if (name2!=NULL && name2[0]!='\0') { return name2; }
-    if (name3!=NULL && name3[0]!='\0') { return name3; }
-    return "";
+/**
+ * Prints the provided text lines to stdout
+ * @param helpTextLines  An array of strings containing each text line to print
+ * @param isMainHelp     `TRUE` when printing the application main help
+ */
+static Bool printHelp(const utf8** helpTextLines, Bool isMainHelp) {
+    int i; static const utf8 *mainHelpFooterLines[] = {
+        "",
+        "LIST OF COMMANDS:",
+        "   list-computers    list names of available computers",
+        "   list-fonts        list available computer fonts",
+        "   export-font       draw the specified font into an image",
+        "   import-font       (intended for development use)",
+        NULL
+    };
+    i=0; while (helpTextLines[i]) { printf("%s\n",helpTextLines[i++]); }
+    if (isMainHelp) { printHelp(mainHelpFooterLines,FALSE); }
+    return TRUE;
+}
+
+/**
+ * Prints the BAS2IMG version to stdout
+ */
+static Bool printVersion(void) {
+    printf("BAS2IMG version %s\n", VERSION  );
+    printf("%s\n"                , COPYRIGHT);
+    return TRUE;
+}
+
+
+/*=================================================================================================================*/
+#pragma mark - > SUB-COMMANDS
+
+/**
+ * Handles the command to generate the image of the BASIC program source
+ * @param argc  The number of elements in the 'argv'
+ * @param argv  An array containing each command-line parameter (starting at argv[1])
+ * @returns     `TRUE` if the image is generated successfully
+ */
+static int cmdGenerateImage(int argc, char* argv[]) {
+    int i; const utf8 *param; Config config;
+    static const utf8 *help[] = {
+        "USAGE:",
+        "   bas2img #<computer-name> [options] file.bas",
+        "   bas2img COMMAND [options]"
+        "",
+        "  OPTIONS:",
+        "    !<font-name>             force to use a specific font",
+        "    -b  --bmp                generate BMP image (default)",
+        "    -g  --gif                generate GIF image",
+        "    -c  --char-width <n>     width of each character in pixels (default = 8)",
+        "    -l  --line-length <n>    maximum number of character per line (default = 0)",
+        "    -w  --wrap               wrap long lines",
+        "    -s  --scale <n>          scale each character by <n>",
+        "    -H  --horizontal         use horizontal orientation (default)",
+        "    -V  --vertical           use vertical orientation",
+        "    -o  --output <file>      write the generated image to <file>",
+        "    -h, --help               display this help and exit",
+        "    -v, --version            output version information and exit",
+        NULL
+    };
+    const utf8 *computerName   = NULL;
+    const utf8 *fontName       = NULL;
+    const utf8 *basicFilePath  = NULL;
+    const utf8 *outputFilePath = NULL;
+    Bool   printHelpAndExit    = (argc<=1);
+    Bool   printVersionAndExit = FALSE;
+    config.charWidth    = 0; /* < 0 = use computer default */
+    config.charHeight   = 0; /* < 0 = use computer default */
+    config.charScale    = 0; /* < 0 = use computer default */
+    config.margin       = 0;
+    config.padding      = 0;
+    config.lineWidth    = 0;
+    config.lineWrapping = FALSE;
+    config.imageFormat  = BMP;
+    config.orientation  = HORIZONTAL;
+    config.computer     = NULL;
+
+    /* process all parameters */
+    for (i=1; i<argc; ++i) { param=argv[i];
+        if      ( firstChar(param)=='#' ) { computerName  = param; }
+        else if ( firstChar(param)=='!' ) { fontName      = param; }
+        else if ( firstChar(param)!='-' ) { basicFilePath = param; }
+        else if ( isOption(param,"-b","--bmp"        ) ) { config.imageFormat=BMP;          }
+        else if ( isOption(param,"-g","--gif"        ) ) { config.imageFormat=GIF;          }
+        else if ( isOption(param,"-c","--char-width" ) ) { config.charWidth=atoi(getOptionCfg(&i,argc,argv)); }
+        else if ( isOption(param,"-l","--line-length") ) { config.lineWidth=atoi(getOptionCfg(&i,argc,argv)); }
+        else if ( isOption(param,"-w","--wrap"       ) ) { config.lineWrapping=TRUE; }
+        else if ( isOption(param,"-s","--scale"      ) ) { config.charScale=atoi(getOptionCfg(&i,argc,argv)); }
+        else if ( isOption(param,"-H","--horizontal" ) ) { config.orientation=HORIZONTAL;   }
+        else if ( isOption(param,"-V","--vertical"   ) ) { config.orientation=VERTICAL;     }
+        else if ( isOption(param,"-o","--output"     ) ) { outputFilePath=param; }
+        else if ( isOption(param,"-h","--help"       ) ) { printHelpAndExit=TRUE;    }
+        else if ( isOption(param,"-v","--version"    ) ) { printVersionAndExit=TRUE; }
+        else    { return error(ERR_UNKNOWN_PARAM,param); }
+    }
+    
+    if      ( printHelpAndExit    ) { return printHelp(help,TRUE); }
+    else if ( printVersionAndExit ) { return printVersion();       }
+    
+    if (!computerName) { return error(ERR_MISSING_COMPUTER_NAME,0); }
+    config.computer = getComputer(computerName);
+    if (!config.computer) { return error(ERR_NONEXISTENT_COMPUTER,computerName); }
+    
+    if (!basicFilePath) { return error(ERR_MISSING_BAS_PATH,0); }
+    generateImageFromBASIC(outputFilePath, basicFilePath, &config);
+    return success ? TRUE : FALSE;
+}
+
+/**
+ * Handles the command to prints the list of available computers (list-computers)
+ * @param argc  The number of elements in the 'argv'
+ * @param argv  An array containing each command-line parameter (starting at argv[1])
+ * @returns     `TRUE` if the list is printed successfully
+ */
+static Bool cmdListComputers(int argc, char* argv[]) {
+    int i; const utf8 *param;
+    static const utf8 *help[] = {
+        "USAGE:",
+        "   bas2img list-computers [options]",
+        "",
+        "  OPTIONS:",
+        "    -a  --all         include all computers variations",
+        "    -h  --help        display this help and exit",
+        NULL
+    };
+    Bool printHelpAndExit = FALSE;
+    Bool printAll         = FALSE;
+    assert( argv!=NULL );
+    /* process all parameters */
+    for (i=1; i<argc; ++i) { param=argv[i];
+        if      ( isOption(param,"-a","--all"    ) ) { printAll         = TRUE; }
+        else if ( isOption(param,"-h","--help"   ) ) { printHelpAndExit = TRUE; }
+        else    { return error(ERR_UNKNOWN_PARAM,param); }
+    }
+    if ( printHelpAndExit ) { return printHelp(help,FALSE); }
+    printAvailableComputers(printAll);
+    return success ? TRUE : FALSE;
+}
+
+/**
+ * Handles the command to prints the list of available fonts (list-fonts)
+ * @param argc  The number of elements in the 'argv'
+ * @param argv  An array containing each command-line parameter (starting at argv[1])
+ * @returns     `TRUE` if the list is printed successfully
+ */
+static Bool cmdListFonts(int argc, char* argv[]) {
+    int i; const utf8 *param;
+    static const utf8 *help[] = {
+        "USAGE:",
+        "   bas2img list-fonts [options]",
+        "",
+        "  OPTIONS:",
+        "    -a  --all         include fonts of all computers variations",
+        "    -h  --help        display this help and exit",
+        NULL
+    };
+    Bool printHelpAndExit = FALSE;
+    Bool printAll         = FALSE;
+    assert( argv!=NULL );
+    /* process al parameters */
+    for (i=1; i<argc; ++i) { param=argv[i];
+        if      ( isOption(param,"-a","--all"    ) ) { printAll         = TRUE; }
+        else if ( isOption(param,"-h","--help"   ) ) { printHelpAndExit = TRUE; }
+        else    { return error(ERR_UNKNOWN_PARAM,param); }
+    }
+    if ( printHelpAndExit ) { return printHelp(help,FALSE); }
+    printAvailableFonts(printAll);
+    return success ? TRUE : FALSE;
+}
+
+/**
+ * Handles the command to export fonts (export-font)
+ * @param argc  The number of elements in the 'argv'
+ * @param argv  An array containing each command-line parameter (starting at argv[1])
+ * @returns     `TRUE` if the font is exported successfully
+ */
+static Bool cmdExportFont(int argc, char* argv[]) {
+    int i; const utf8 *param; const Font* font;
+    static const utf8 *help[] = {
+        "USAGE:",
+        "   bas2img export-font [options] !<font-name>",
+        "",
+        "  OPTIONS:",
+        "    -H  --horizontal         use horizontal orientation (default)",
+        "    -V  --vertical           use vertical orientation",
+        "    -o  --output <file>      write the output image to <file>",
+        "    -h  --help               display this help and exit",
+        NULL
+    };
+    const utf8* fontName       = NULL;
+    const utf8* outputFilePath = NULL;
+    Orientation orientation    = HORIZONTAL;
+    Bool printHelpAndExit      = (argc<=1);
+    assert( argv!=NULL );
+    /* process al parameters */
+    for (i=1; i<argc; ++i) { param=argv[i];
+        if      ( firstChar(param)=='!'                ) { fontName         = param;      }
+        else if ( isOption(param,"-H","--horizontal" ) ) { orientation      = HORIZONTAL; }
+        else if ( isOption(param,"-V","--vertical"   ) ) { orientation      = VERTICAL;   }
+        else if ( isOption(param,"-o","--output"     ) ) { outputFilePath   = param;      }
+        else if ( isOption(param,"-h","--help"       ) ) { printHelpAndExit = TRUE;       }
+        else  { return error(ERR_UNKNOWN_PARAM,param); }
+    }
+    
+    if ( printHelpAndExit ) { return printHelp(help,FALSE); }
+    
+    if (!fontName) { return error(ERR_MISSING_FONT_NAME,0); }
+    font = getFont(fontName);
+    if (!font) { return error(ERR_NONEXISTENT_FONT,fontName); }
+    exportFont(font,orientation);
+    return success ? TRUE : FALSE;
+}
+
+/**
+ * Handles the command to import fonts (import-font)
+ * @param argc  The number of elements in the 'argv'
+ * @param argv  An array containing each command-line parameter (starting at argv[1])
+ * @returns     `TRUE` if the font is imported successfully
+ */
+static Bool cmdImportFont(int argc, char* argv[]) {
+    int i; const utf8 *param;
+    static const utf8 *help[] = {
+        "USAGE:",
+        "   bas2img import-font [options] <image-file>",
+        "",
+        "  OPTIONS:",
+        "    -b  --bmp                generate BMP image (default)",
+        "    -g  --gif                generate GIF image",
+        "    -H  --horizontal         use horizontal orientation (default)",
+        "    -V  --vertical           use vertical orientation",
+        "    -o  --output <file>      write the generated C source code to <file>",
+        "    -h  --help               display this help and exit",
+        NULL
+    };
+    const utf8* fontName       = NULL;
+    const utf8* imageFilePath  = NULL;
+    const utf8* outputFilePath = NULL;
+    Orientation orientation    = HORIZONTAL;
+    ImageFormat imageFormat    = BMP;
+    Bool printHelpAndExit      = (argc<=1);
+    assert( argv!=NULL );
+    /* process al parameters */
+    for (i=1; i<argc; ++i) { param=argv[i];
+        if      ( firstChar(param)=='!'                ) { fontName         = param;      }
+        else if ( isOption(param,"-b","--bmp"        ) ) { imageFormat      = BMP;        }
+        else if ( isOption(param,"-g","--gif"        ) ) { imageFormat      = GIF;        }
+        else if ( isOption(param,"-H","--horizontal" ) ) { orientation      = HORIZONTAL; }
+        else if ( isOption(param,"-V","--vertical"   ) ) { orientation      = VERTICAL;   }
+        else if ( isOption(param,"-o","--output"     ) ) { outputFilePath   = param;      }
+        else if ( isOption(param,"-h","--help"       ) ) { printHelpAndExit = TRUE;       }
+        else  { return error(ERR_UNKNOWN_PARAM,param); }
+    }
+
+    if ( printHelpAndExit ) { return printHelp(help,FALSE); }
+    
+    if (!imageFilePath) { return error(ERR_MISSING_FONTIMG_PATH,0); }
+    importArrayFromImage(outputFilePath, imageFilePath, imageFormat, orientation);
+    return success ? TRUE : FALSE;
 }
 
 
 /*=================================================================================================================*/
 #pragma mark - > MAIN
 
-
+/**
+ * Application starting point
+ * @param argc  The number of elements in the 'argv' array
+ * @param argv  An array containing each command-line parameter (starting at argv[1])
+ */
 int main(int argc, char* argv[]) {
-    int i; const Font *font; const Computer *computer; Config config;
-    Bool printHelpAndExit      = FALSE;
-    Bool printVersionAndExit   = FALSE;
-    Bool fullListing           = TRUE;
-    Mode        mode           = GENERATE_IMAGE;
-    ImageFormat imageFormat    = BMP;
-    Orientation orientation    = HORIZONTAL;
-    const utf8 *inputFilePath  = NULL;
-    const utf8 *imageFilePath  = NULL;
-    const utf8 *basFilePath    = NULL;
-    const utf8 *computerName   = NULL;
-    const utf8 *fontName       = NULL;
-    const utf8 *param;
-    const utf8 *help[] = {
-        "USAGE: bas2img [options] file.bas","",
-        "  OPTIONS:",
-        "    -c  --computer <name>  ",
-        "    -l  --list            list names of all available computers",
-        "    -f  --list-fonts      list all available computer fonts",
-        "    -b  --bmp             generate BMP image (default)",
-        "    -g  --gif             generate GIF image",
-        "    -6                    use 6 pixels wide characters",
-        "    -7                    use 7 pixels wide characters",
-        "    -8                    use 8 pixels wide characters (default)",
-        "    -w  --width <n>       maximum number of character per line",
-        "    -H  --horizontal      use horizontal orientation (default)",
-        "    -V  --vertical        use vertical orientation",
-        "    -X  --export-font     draw the computer font into the image",
-        "    -@  --import-font     (intended for development use)",
-        "    -h, --help            display this help and exit",
-        "    -v, --version         output version information and exit",
-        NULL
-    };
+    const utf8* const command = argc>1 ? argv[1] : "";
     
-    /* default configuration */
-    config.charWidth    = 8;
-    config.charHeight   = 8;
-    config.lineWidth    = 0;
-    config.lineWrapping = TRUE;
-
-    /* process all parameters */
-    for (i=1; i<argc; ++i) { param=argv[i];
-        if      ( param[0]!='-' ) { inputFilePath=param; }
-        else if ( isOption(param,"-c","--computer"   ) ) { computerName=getOptionCfg(&i,argc,argv);    }
-        else if ( isOption(param,"-l","--list"       ) ) { mode=LIST_COMPUTERS; fullListing=FALSE; }
-        else if ( isOption(param,"-L","--list-all"   ) ) { mode=LIST_COMPUTERS; fullListing=TRUE;  }
-        else if ( isOption(param,"-f","--list-fonts" ) ) { mode=LIST_FONTS;     fullListing=TRUE;  }
-        else if ( isOption(param,"-b","--bmp"        ) ) { imageFormat=BMP;          }
-        else if ( isOption(param,"-g","--gif"        ) ) { imageFormat=GIF;          }
-        else if ( isOption(param,"-6",""             ) ) { config.charWidth=6;       }
-        else if ( isOption(param,"-7",""             ) ) { config.charWidth=7;       }
-        else if ( isOption(param,"-8",""             ) ) { config.charWidth=8;       }
-        else if ( isOption(param,"-w","--width"      ) ) { config.lineWidth=atoi(getOptionCfg(&i,argc,argv)); }
-        else if ( isOption(param,"-H","--horizontal" ) ) { orientation=HORIZONTAL;   }
-        else if ( isOption(param,"-V","--vertical"   ) ) { orientation=VERTICAL;     }
-        else if ( isOption(param,"-X","--export-font") ) { mode=EXPORT_FONT; fontName=getOptionCfg(&i,argc,argv); }
-        else if ( isOption(param,"-@","--import-font") ) { mode=IMPORT_FONT; imageFilePath=getOptionCfg(&i,argc,argv); }
-        else if ( isOption(param,"-h","--help"       ) ) { printHelpAndExit=TRUE;    }
-        else if ( isOption(param,"-v","--version"    ) ) { printVersionAndExit=TRUE; }
-        else    { error(ERR_UNKNOWN_PARAM,param); printErrorMessage(); return 0; }
-    }
-    
-    if ( printHelpAndExit ) {
-        i=0; while (help[i]!=NULL) { printf("%s\n",help[i++]); }
-        return 0;
-    }
-    else if ( printVersionAndExit ) {
-        printf("BAS2IMG version %s\n", VERSION  );
-        printf("%s\n"                , COPYRIGHT);
-        return 0;
-    }
-    switch (mode) {
-            
-        case LIST_COMPUTERS:
-            printAvailableComputers(fullListing);
-            break;
-            
-        case LIST_FONTS:
-            printAvailableFonts(fullListing);
-            break;
-            
-        case IMPORT_FONT:
-            imageFilePath = firstValid( imageFilePath, inputFilePath, NULL );
-            if (!imageFilePath) { error(ERR_MISSING_FONTIMG_PATH,0); break; }
-            importArrayFromImage(NULL, imageFilePath, imageFormat, orientation);
-            break;
-            
-        case EXPORT_FONT:
-            fontName = firstValid( fontName, inputFilePath, NULL );
-            if (!fontName) { error(ERR_MISSING_FONT_NAME,0); break; }
-            font = getFont(fontName);
-            if (!font) { error(ERR_NONEXISTENT_FONT,fontName); break; }
-            exportFont(font,orientation);
-            break;
-            
-        case GENERATE_IMAGE:
-            computerName = firstValid( computerName, "msx", NULL );
-            if (!computerName) { error(ERR_MISSING_COMPUTER_NAME,0); break;}
-            computer = getComputer(computerName);
-            if (!computer) { error(ERR_NONEXISTENT_COMPUTER,computerName); break; }
-            basFilePath = firstValid( basFilePath, inputFilePath, NULL );
-            if (!basFilePath) { error(ERR_MISSING_BAS_PATH,0); break; }
-            generateImageFromBASIC(NULL, imageFormat, orientation,  basFilePath, computer, &config);
-            break;
-    }
+    /* handle commands */
+    if      (isCommand(command,"list-computers")) { cmdListComputers(argc-1, argv+1); }
+    else if (isCommand(command,"list-fonts"    )) { cmdListFonts    (argc-1, argv+1); }
+    else if (isCommand(command,"import-font"   )) { cmdImportFont   (argc-1, argv+1); }
+    else if (isCommand(command,"export-font"   )) { cmdExportFont   (argc-1, argv+1); }
+    else if (isCommand(command,"generate-image")) { cmdGenerateImage(argc-1, argv+1); }
+    else                                          { cmdGenerateImage(argc, argv);     }
     return printErrorMessage();
 }
 

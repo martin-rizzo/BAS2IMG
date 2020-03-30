@@ -69,5 +69,14 @@ const utf8 * allocFileNameWithoutExtension(const utf8 *originalFilePath);
 const utf8 * allocStringWithoutPrefix(const utf8 *string, const utf8 *prefixToRemove);
 
 
+/**
+ * Returns the first positive value from the provided list of values
+ * @param value1   first value to check
+ * @param value2   second value to check
+ * @param value3   third value to check
+ */
+int firstPositiveValue(int value1, int value2, int value3);
+
+
 #endif /* bas2img_helpers_h */
 

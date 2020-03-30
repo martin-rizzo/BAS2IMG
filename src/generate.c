@@ -42,20 +42,21 @@
 
 #define NumberOfColors 256
 
-static Bool generateImageFromRows(FILE           *imageFile,
-                                  ImageFormat    imageFormat,
-                                  Orientation    orientation,
+static Bool generateImageFromRows(FILE           *outputFile,
                                   const Rows     rows,
-                                  const Computer *computer,
                                   const Config   *config
                                   ) {
-    int width, height;
+    int width, height, charWidth, charHeight;
     int x,y,i, length;
     const Char256 *sour;
+    const Computer* computer;
     Image *image;
     const Rgb black = { 0,0,0 };
     const Rgb blue  = { 64,64,255 };
     const Rgb white = { 255,255,255 };
+    assert( outputFile!=NULL );
+    assert( rows!=NULL );
+    assert( config!=NULL && config->computer!=NULL );
 
     /*
     for ( i=0 ; lines[i] ; ++i ) {
@@ -63,9 +64,12 @@ static Bool generateImageFromRows(FILE           *imageFile,
     }
     */
     
-    width  = getMaxRowLength(rows) * config->charWidth;
-    height = getNumberOfRows(rows) * config->charHeight;
-    image  = allocImage(width,height);
+    computer   = config->computer;
+    charWidth  = firstPositiveValue(config->charWidth,  computer->charWidth,  8);
+    charHeight = firstPositiveValue(config->charHeight, computer->charHeight, 8);
+    width      = getMaxRowLength(rows) * charWidth;
+    height     = getNumberOfRows(rows) * charHeight;
+    image      = allocImage(width,height);
     
     setPaletteGradient(image, 0,blue,   7,white);
     setPaletteGradient(image, 8,white, 15,black);
@@ -83,75 +87,70 @@ static Bool generateImageFromRows(FILE           *imageFile,
         sour   = rows[i]->chars;
         length = rows[i]->length;
         while (length-->0) {
-            drawChar(image,x,y,config->charWidth,config->charHeight,*sour++);
-            x+=config->charWidth; }
-        y+=config->charHeight;
+            drawChar(image,x,y,charWidth,charHeight,*sour++);
+            x+=charWidth; }
+        y+=charHeight;
     }
     
-    
-    fwriteBmpImage(image,imageFile);
+    fwriteBmpImage(image,outputFile);
     freeImage(image);
     
     return FALSE;
 }
 
-
-static Bool generateImageFromBasicBuffer(FILE           *imageFile,
-                                         ImageFormat    imageFormat,
-                                         Orientation    orientation,
-                                         const Byte     *basicBuffer,
-                                         long           basicBufferSize,
-                                         const Computer *computer,
-                                         const Config   *config
+/**
+ * Generates an image displaying the source code contained in the provided buffer
+ * @param outputFile       The output file where the image will be stored
+ * @param basicBuffer      A buffer containing the BASIC program
+ * @param basicBufferSize  The length of `basicBuffer` in number of bytes
+ * @param config           The configuration used to generate the image
+ */
+static Bool generateImageFromBasicBuffer(FILE         *outputFile,
+                                         const Byte   *basicBuffer,
+                                         long         basicBufferSize,
+                                         const Config *config
                                          ) {
     
     Rows rows; int wrapLength;
-    assert( imageFile!=NULL );
-    assert( orientation==HORIZONTAL || orientation==VERTICAL );
+    const Computer* computer;
+    assert( outputFile!=NULL );
     assert( basicBuffer!=NULL && basicBufferSize>0 );
-    assert( computer!=NULL && config!=NULL );
-    assert( config!=NULL );
+    assert( config!=NULL && config->computer!=NULL );
     
+    computer   = config->computer;
     wrapLength = config->lineWrapping ? config->lineWidth : 0;
+    assert( computer->decoder && computer->decoder->decode );
     rows = allocRowsFromBasicBuffer( basicBuffer, basicBufferSize, wrapLength, computer->decoder->decode );
     if (rows) {
-        generateImageFromRows(imageFile,imageFormat,orientation,rows,computer,config);
+        generateImageFromRows(outputFile,rows,config);
         freeRows(rows);
     }
     return success ? TRUE : FALSE;
 }
 
-
-
 /**
  * Generates an image displaying the source code of the provided BASIC program
  *
  * @param imageFilePath  The path to the output image (NULL = use the BASIC program name)
- * @param imageFormat    The format of the output image (only BMP format is supported)
  * @param basicFilePath  The path to the BASIC program used as input
- * @param computer       The computer for which to process the BASIC program
  * @param config         The configuration used to generate the image
  */
 Bool generateImageFromBASIC(const utf8     *imageFilePath,
-                            ImageFormat    imageFormat,
-                            Orientation    orientation,
                             const utf8     *basicFilePath,
-                            const Computer *computer,
                             const Config   *config)
 {
     const utf8 * imageExtension;
     FILE *imageFile=NULL, *basicFile=NULL;
     Byte *basicBuffer=NULL; long basicBufferSize=0;
     
-    assert( orientation==HORIZONTAL || orientation==VERTICAL );
-    assert( basicFilePath!=NULL && computer!=NULL && config!=NULL );
-    if (imageFormat==GIF) { return error(ERR_GIF_NOT_SUPPORTED,0); }
+    assert( basicFilePath!=NULL && config!=NULL );
+    if (config->imageFormat==GIF) { return error(ERR_GIF_NOT_SUPPORTED,0); }
     
     /* add extensions (when appropiate) */
     basicFilePath = allocFilePath(basicFilePath, ".bas", OPTIONAL_EXTENSION);
     
     /* make the path to the image file */
-    imageExtension = getImageExtension(imageFormat);
+    imageExtension = getImageExtension(config->imageFormat);
     if (imageFilePath) { imageFilePath = allocFilePath(imageFilePath,imageExtension,OPTIONAL_EXTENSION); }
     else               { imageFilePath = allocFilePath(basicFilePath,imageExtension,FORCED_EXTENSION  ); }
     
@@ -181,7 +180,7 @@ Bool generateImageFromBASIC(const utf8     *imageFilePath,
     }
     if (success) { /* 6) proceed! */
         printf("Generating the image '%s' containing the source code of %s\n", imageFilePath, basicFilePath);
-        generateImageFromBasicBuffer( imageFile, imageFormat, orientation, basicBuffer, basicBufferSize, computer, config);
+        generateImageFromBasicBuffer(imageFile, basicBuffer, basicBufferSize, config);
     }
     /*-------------------------------------------------------------------*/
     

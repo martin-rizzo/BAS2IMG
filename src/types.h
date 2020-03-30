@@ -97,16 +97,22 @@ typedef struct Computer {
     const char    *description;
     const Decoder *decoder;
     const Font    *font;
+    const int     charWidth;
+    const int     charHeight;
 } Computer;
 
 typedef struct Config {
-    int  margin;
-    int  padding;
-    int  charWidth;     /* < character width in pixels  (default 8)        */
-    int  charHeight;    /* < character height in pixels (default 8)        */
+    int  charWidth;     /* < character width in pixels  (default 0) */
+    int  charHeight;    /* < character height in pixels (default 0) */
+    int  charScale;     /* < the magnification scale (default 0)    */
+    int  margin;        /* < margin around the box  */
+    int  padding;       /* < padding within the box */
     int  lineWidth;     /* < maximum number of characters per line (0 = use the longest line length) */
     Bool lineWrapping;  /* < TRUE = wraps lines that exceed the line width */
-    
+    ImageFormat    imageFormat;  /* < image file format (BMP, GIF, ...) */
+    Orientation    orientation;  /* < image orientation (vertical or horizontal) */
+    const Computer *computer;    /* < computer description */
+
 } Config;
 
 

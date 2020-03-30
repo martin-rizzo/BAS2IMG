@@ -42,7 +42,6 @@
 #define FONT_IMG_HEIGHT      128           /* < the font image height (in pixels)              */
 #define FONT_IMG_NUMOFCOLORS 2             /* < the number of colors of font images            */
 #define FONT_IMG_PREFIX      "font__"      /* < prefix used when exporting fonts               */
-#define isOption(param,opname1,opname2)   (strcmp(param,opname1)==0 || strcmp(param,opname2)==0)
 
 
 

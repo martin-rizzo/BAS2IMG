@@ -53,32 +53,28 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "--export-font msx"
+            argument = "export-font msx"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = ""
+            argument = "import-font font__msx.bmp"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--import-font font__msx.bmp"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--import-font -V font__msx.bmp"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--list-fonts"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-c msx demons.bas"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "-c msx -6 -w 60 $HOME/Development/Retro/msx-10liner/02_ALIENS10/ALIENS10.BAS"
+            argument = "list-computers -h"
             isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "list-fonts"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "#msx demons.bas"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "#msx -c 6 -w 60 $HOME/Development/Retro/msx-10liner/02_ALIENS10/ALIENS10.BAS"
+            isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>
