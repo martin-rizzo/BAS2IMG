@@ -29,8 +29,8 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
 #include "bmp.h"
 #define getInt16(ptr) (ptr[0] | ptr[1]<<8); ptr+=2;
 #define getInt32(ptr) (ptr[0] | ptr[1]<<8 | ptr[2]<<16 | ptr[3]<<24); ptr+=4;
@@ -85,7 +85,7 @@ static int fwriteBmpHeader(const BmpHeader *header, FILE *file) {
 
 
 /*=================================================================================================================*/
-#pragma mark - > EXTERN FUNCTIONS
+#pragma mark - > PUBLIC FUNCTIONS
 
 int getBmpScanlineSize(int width, int numberOfColors) {
     const int bitsPerPixel =
