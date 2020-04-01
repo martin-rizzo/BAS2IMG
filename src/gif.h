@@ -39,17 +39,23 @@
  * Writes an image to file using the GIF format
  * @param width           The width of the image in pixels
  * @param height          The height of the image in pixels
- * @param scanlineSize    The number of bytes from one line of pixels to the next
- * @param numberOfColors  The number of colors of the image (valid values: 2 or 256)
+ * @param scanlineSize    The number of bytes from one line of pixels to the next (negative = upside-down image)
+ * @param bitsPerPixel    The number of bits for each pixel (valid values: 1 or 8)
  * @param colorTable      An array of RGBA elements (32bits) that maps the values in the pixel-data to rgb colors
  * @param colorTableSize  The size of `colorTable` in number of BYTES
  * @param pixelData       An array of values describing each pixel of the image
  * @param pixelDataSize   The size of `pixelData` in number of BYTES
+ * @param file            The output file where the image will be stored
  */
-Bool fwriteGif(int width, int height, int scanlineSize, int numberOfColors,
-               const void *colorTable, int colorTableSize,
-               const void *pixelData,  int pixelDataSize,
-               FILE *file);
+Bool fwriteGif(int         width,
+               int         height,
+               int         scanlineSize,
+               int         bitsPerPixel,
+               const void* colorTable,
+               int         colorTableSize,
+               const void* pixelData,
+               int         pixelDataSize,
+               FILE*       file);
 
 
 #endif /* bas2img_gif_h */

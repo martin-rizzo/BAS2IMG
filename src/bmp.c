@@ -41,6 +41,38 @@
 #define YPixelsPerMeter   2834
 
 
+
+/*=================================================================================================================*/
+#pragma mark - > BITMAP HEADER
+
+void initBmpHeader(BmpHeader* header,
+                   int        width,
+                   int        height,
+                   int        bitsPerPixel)
+{
+    const int scanlineSize   = getScanlineSize(width, bitsPerPixel);
+    const int colorTableSize = 4 * (1<<bitsPerPixel);
+    const int pixelDataSize  = scanlineSize * height;
+    assert( width  >  0 );
+    assert( height != 0 );
+    assert( bitsPerPixel==1 || bitsPerPixel==4 || bitsPerPixel==8 );
+    
+    header->fileType        = 0x4D42;
+    header->pixelDataOffset = FileHeaderSize + BmpInfoHeaderSize + colorTableSize;
+    header->fileSize        = header->pixelDataOffset + pixelDataSize;
+    header->headerSize      = BmpInfoHeaderSize;
+    header->imageWidth      = width;
+    header->imageHeight     = height;
+    header->planes          = 1;
+    header->bitsPerPixel    = bitsPerPixel;
+    header->pixelDataSize   = pixelDataSize;
+    header->compression     = FALSE;
+    header->totalColors     = 0;
+    header->importantColors = 0;
+    header->scanlineSize    = scanlineSize;
+}
+
+
 /*=================================================================================================================*/
 #pragma mark - > WRITTING TO FILE
 
@@ -87,41 +119,27 @@ static int fwriteBmpHeader(const BmpHeader *header, FILE *file) {
 /*=================================================================================================================*/
 #pragma mark - > PUBLIC FUNCTIONS
 
-int getBmpScanlineSize(int width, int numberOfColors) {
-    const int bitsPerPixel =
-    numberOfColors==  2 ? 1 :
-    numberOfColors== 16 ? 4 :
-    numberOfColors==256 ? 8 : 32;
-    assert( width>0 && numberOfColors>=0 );
+/**
+ * Returns the exact number of bytes from one line of pixels to the next
+ *
+ * The BMP format needs the scanline's length to be a multiple of 4, this
+ * function calculates that value based on the bmp width (in pixels) and
+ * the number of bits of each pixel.
+ * @param width         The width of the image in pixels
+ * @param bitsPerPixel  The number of bits for each pixel
+ */
+int getBmpScanlineSize2(int width, int bitsPerPixel) {
+    assert( width>0 && bitsPerPixel>0 );
     return getScanlineSize(width, bitsPerPixel);
 }
 
-Bool setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors) {
-    const int bitsPerPixels  = numberOfColors==2 ? 1 : numberOfColors==16 ? 4 : 8;
-    const int scanlineSize   = getScanlineSize(width, bitsPerPixels);
-    const int colorTableSize = 4 * numberOfColors;
-    const int pixelDataSize  = scanlineSize * height;
-    assert( width  >  0 );
-    assert( height != 0 );
-    assert( numberOfColors==2 || numberOfColors==16 || numberOfColors==256 );
-    
-    header->fileType        = 0x4D42;
-    header->pixelDataOffset = FileHeaderSize + BmpInfoHeaderSize + colorTableSize;
-    header->fileSize        = header->pixelDataOffset + pixelDataSize;
-    header->headerSize      = BmpInfoHeaderSize;
-    header->imageWidth      = width;
-    header->imageHeight     = height;
-    header->planes          = 1;
-    header->bitsPerPixel    = bitsPerPixels;
-    header->pixelDataSize   = pixelDataSize;
-    header->compression     = FALSE;
-    header->totalColors     = 0;
-    header->importantColors = 0;
-    header->scanlineSize    = scanlineSize;
-    return TRUE;
-}
-
-Bool extractBmpHeader(BmpHeader *header, const void* data, long dataSize) {
+/**
+ * Fills the BmpHeader structure with data that was read from a file
+ * @param header      The BmpHeader structure to fill
+ * @param data        A buffer containing data that was read from a BMP file
+ * @param dataSize    The size of `data` in number of BYTES
+ */
+Bool fillBmpHeader(BmpHeader *header, const void* data, long dataSize) {
     const Byte *ptr;
     assert( header!=NULL && data!=NULL && dataSize>0 );
     
@@ -147,6 +165,7 @@ Bool extractBmpHeader(BmpHeader *header, const void* data, long dataSize) {
 }
 
 
+/*
 Bool fwriteBmp(const BmpHeader *header,
                const void      *colorTable, int colorTableSize,
                const void      *pixelData , int pixelDataSize,
@@ -156,4 +175,52 @@ Bool fwriteBmp(const BmpHeader *header,
     fwriteBmpHeader(header, file)                &&
     fwriteData(colorTable, colorTableSize, file) &&
     fwriteData(pixelData,  pixelDataSize,  file);
+}
+*/
+
+
+/**
+ * Writes an image to file using the BMP format
+ * @param width           The width of the image in pixels
+ * @param height          The height of the image in pixels
+ * @param scanlineSize    The number of bytes from one line of pixels to the next (negative = upside-down image)
+ * @param bitsPerPixel    The number of bits for each pixel (valid values: 1 or 8)
+ * @param colorTable      An array of RGBA elements (32bits) that maps the values in the pixel-data to rgb colors
+ * @param colorTableSize  The size of `colorTable` in number of BYTES
+ * @param pixelData       An array of values describing each pixel of the image
+ * @param pixelDataSize   The size of `pixelData` in number of BYTES
+ * @param file            The output file where the image will be written
+ */
+Bool fwriteBmp(int         width,
+               int         height,
+               int         scanlineSize,
+               int         bitsPerPixel,
+               const void* colorTable,
+               int         colorTableSize,
+               const void* pixelData,
+               int         pixelDataSize,
+               FILE*       file)
+{
+    BmpHeader header;
+    assert( width>0 && height>0 );
+    assert( scanlineSize==getBmpScanlineSize2(width,bitsPerPixel) );
+    assert( bitsPerPixel==1 || bitsPerPixel==8 );
+    assert( colorTable!=NULL && colorTableSize>0 );
+    assert( pixelData!=NULL && pixelDataSize>0 );
+    assert( file!=NULL );
+    
+    /* handle upside-down image */
+    if (scanlineSize<0) {
+        height       = -height;
+        scanlineSize = -scanlineSize;
+    }
+    /* generate bmp-header and check if provided `scanlineSize` matches with BMP format */
+    initBmpHeader(&header, width, height, bitsPerPixel);
+    assert( header.scanlineSize==scanlineSize );
+    
+    /* write data using bmp format */
+    return
+        fwriteBmpHeader(&header, file)               &&
+        fwriteData(colorTable, colorTableSize, file) &&
+        fwriteData(pixelData,  pixelDataSize,  file);
 }

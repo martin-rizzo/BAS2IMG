@@ -55,7 +55,6 @@ static void exportFontToImageBuffer(Byte*       buffer,
     int x,y,col,row,segment,line,charIdx;
     assert( buffer!=NULL );
     assert( bufferSize>=(scanlineSize*FONT_IMG_HEIGHT) );
-    assert( scanlineSize>=FONT_IMG_WIDTH/8 );
     /* this function assumes square images to make easier */
     /* support horizontal & vertical orientation          */
     assert( FONT_IMG_WIDTH==FONT_IMG_HEIGHT );
@@ -63,6 +62,8 @@ static void exportFontToImageBuffer(Byte*       buffer,
     
     /* handle "upside-down" images */
     if (scanlineSize<0) { scanlineSize=-scanlineSize; upsideDown=TRUE; }
+    assert( scanlineSize>=FONT_IMG_WIDTH/8 );
+    
     /* write one by one all of 256 characters */
     charIdx=0; for (y=0; y<(FONT_IMG_HEIGHT/CHAR_IMG_HEIGHT); ++y) {
         for (x=0; x<(FONT_IMG_WIDTH/CHAR_IMG_WIDTH); ++x,++charIdx) {
@@ -90,18 +91,22 @@ static Bool exportFontToBmpFile(FILE         *outputFile,
                                 Orientation  orientation,
                                 const Font   *font)
 {
-    BmpHeader bmp; Byte* pixelData = NULL;
+    int scanlineSize=0,pixelDataSize=0; Byte* pixelData=NULL;
     static const Byte colorTable[] = { 255,255,255,0,  0,0,0,0 };
     
-    if (success) { /* 1) set bmp header */
-        if (!setBmpHeader(&bmp, FONT_IMG_WIDTH, FONT_IMG_HEIGHT, FONT_IMG_NUMOFCOLORS))
-        { error(ERR_INTERNAL_ERROR,0); }
+    if (success) { /* 1) generate font image in buffer */
+        scanlineSize  = getBmpScanlineSize2(FONT_IMG_WIDTH, FONT_IMG_BITSPERPIXEL);
+        pixelDataSize = FONT_IMG_HEIGHT * scanlineSize;
+        pixelData     = malloc( pixelDataSize );
+        exportFontToImageBuffer(pixelData, pixelDataSize, -scanlineSize, orientation, font);
     }
-    if (success) { /* 2) copy font to an image-buffer and write it into file */
-        pixelData = malloc(bmp.pixelDataSize);
-        exportFontToImageBuffer(pixelData, bmp.pixelDataSize, -bmp.scanlineSize, orientation, font);
-        if (!fwriteBmp(&bmp, colorTable, sizeof(colorTable), pixelData, bmp.pixelDataSize, outputFile))
-        { error(ERR_CANNOT_WRITE_FILE,outputFilePath); }
+    if (success) { /* 2) write font image buffer into a file */
+        if (!fwriteBmp(FONT_IMG_WIDTH, FONT_IMG_HEIGHT, scanlineSize, FONT_IMG_BITSPERPIXEL,
+                       colorTable, sizeof(colorTable),
+                       pixelData, pixelDataSize,
+                       outputFile)) {
+            error(ERR_CANNOT_WRITE_FILE,outputFilePath);
+        }
     }
     free(pixelData);
     return success ? TRUE : FALSE;
@@ -130,7 +135,7 @@ Bool exportFont(const Font *font, Orientation orientation) {
         if (!outputFile) { error(ERR_CANNOT_CREATE_FILE,outputFilePath); }
     }
     if (success) {
-        printf("Exporting font %s to file '%s'", font->name, outputFilePath);
+        printf("Exporting font %s to file '%s'\n", font->name, outputFilePath);
         exportFontToBmpFile(outputFile, outputFilePath, orientation, font);
     }
     /* clean up and return */

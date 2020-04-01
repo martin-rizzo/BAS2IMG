@@ -34,6 +34,7 @@
 #include <string.h>
 #include "image.h"
 #include "bmp.h"
+#include "gif.h"
 
 #define swap(a,b) temp=(a); (a)=(b); (b)=temp
 #define min(a,b)  ((a)<(b) ? (a) : (b))
@@ -52,7 +53,7 @@ Image * allocImage(int width, int height) {
     assert( width>0 && height>0 );
     
     /* the most compatible scanline size */
-    scanlineSize = getBmpScanlineSize(width,256);
+    scanlineSize = getBmpScanlineSize2(width,8);
     
     image = malloc(sizeof(Image));
     image->width          = width;
@@ -172,13 +173,20 @@ void fillRectangle(Image *image, int left, int top, int right, int bottom) {
 #pragma mark - > WRITTING IMAGE TO A FILE
 
 Bool fwriteBmpImage(Image *image, FILE *file) {
-    BmpHeader header;
-    setBmpHeader(&header, image->width, -image->height, 256);
-    return fwriteBmp(&header, image->colorTable, image->colorTableSize, image->pixelData, image->pixelDataSize, file);
+    static const int bitsPerPixel = 8;
+    assert( image!=NULL && file!=NULL );
+    return fwriteBmp(image->width, image->height, image->scanlineSize, bitsPerPixel,
+                     image->colorTable, image->colorTableSize,
+                     image->pixelData , image->pixelDataSize,
+                     file);
 }
 
 Bool fwriteGifImage(Image *image, FILE *file) {
-    assert( FALSE );
-    return FALSE;
+    static const int bitsPerPixel = 8;
+    assert( image!=NULL && file!=NULL );
+    return fwriteGif(image->width, image->height, image->scanlineSize, bitsPerPixel,
+                     image->colorTable, image->colorTableSize,
+                     image->pixelData , image->pixelDataSize,
+                     file);
 }
 

@@ -32,6 +32,53 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "gif.h"
+#define CHUNK_MAX_LENGTH 255 /* < maximum length of each data-chunk contained in the RASTER DATA BLOCK */
+
+/*=================================================================================================================*/
+#pragma mark - > BIT BUFFER
+
+typedef struct BitBuffer {
+    Byte array[CHUNK_MAX_LENGTH];
+    unsigned byte;
+    unsigned shift;
+    unsigned index;
+} BitBuffer;
+
+static void initBitBuffer(BitBuffer* buffer) {
+    buffer->byte  = 0;
+    buffer->shift = 0;
+    buffer->index = 0;
+}
+
+
+static Bool fwriteCode(unsigned code, unsigned length, BitBuffer* buffer, FILE* file) {
+    
+    int i; for (i=0; i<length; ++i) {
+        buffer->byte |= (code&0x01) << buffer->shift++;
+        if (buffer->shift>7) {
+            buffer->array[buffer->index++] = buffer->byte;
+            buffer->byte = buffer->shift = 0;
+            if (buffer->index==CHUNK_MAX_LENGTH) {
+                fputc(CHUNK_MAX_LENGTH,file);
+                fwrite(buffer->array, sizeof(Byte), CHUNK_MAX_LENGTH, file);
+                buffer->index = 0;
+            }
+        }
+        code >>= 1;
+    }
+    return TRUE;
+}
+
+static void flushBitBuffer(BitBuffer* buffer, FILE* file) {
+    if (buffer->shift>0) { buffer->array[buffer->index++] = buffer->byte; }
+    if (buffer->index>0) {
+        fputc(buffer->index,file);
+        fwrite(buffer->array, sizeof(Byte), buffer->index, file);
+    }
+}
+
+
+
 
 /*=================================================================================================================*/
 #pragma mark - > WRITTING TO FILE
@@ -47,8 +94,27 @@ static Bool fwriteInt8(unsigned value, FILE *file) {
     return fputc(value,file)==value;
 }
 
-static Bool fwriteRGB(const Byte* rgb, FILE *file) {
-    return 3==fwrite(rgb, 1, 3, file);
+/**
+ * Write a palette of colors into a GIF file
+ * @param bgraColors       An array of colors in format BGRA (first byte=Blue, second byte=Green, ..)
+ * @param sizeInBytes      The size of `bgraColors` in bytes
+ * @param numberOfColors   Number of color of the palette to write
+ * @param file             The output file where the palette will be written
+ */
+static Bool fwritePaletteBGRA(const Byte* bgraColors, int sizeInBytes, int numberOfColors, FILE *file) {
+    int i; const Byte *last, *bgra; Byte rgb[3];
+    assert( bgraColors!=NULL && sizeInBytes>0 );
+    assert( numberOfColors>0 );
+    assert( file!=NULL );
+    
+    bgra = bgraColors;
+    last = &bgra[sizeInBytes-4];
+    for (i=0; i<numberOfColors; ++i) {
+        if (bgra<=last) { rgb[0]=bgra[2]; rgb[1]=bgra[1]; rgb[2]=bgra[0]; bgra+=4; }
+        else            { rgb[0]=rgb[1]=rgb[2]=0; }
+        if ( 3!=fwrite(rgb, 1, 3, file) ) { return FALSE; }
+    }
+    return TRUE;
 }
 
 
@@ -59,25 +125,24 @@ static Bool fwriteRGB(const Byte* rgb, FILE *file) {
  * Writes the GIF header
  * @param width           The width of the image in pixels
  * @param height          The height of the image in pixels
- * @param numberOfColors  The number of colors of the image (valid values: 2 or 256)
+ * @param bitsPerPixel    The number of bits for each pixel (valid values: 1 or 8)
  * @param colorTable      An array of RGBA elements that maps values in the pixel-data to rgb colors
  */
 static Bool fwriteHeader(int         width,
                          int         height,
-                         int         numberOfColors,
-                         const void *colorTable,
+                         int         bitsPerPixel,
+                         const void* colorTable,
                          int         colorTableSize,
-                         FILE       *file)
+                         FILE*       file)
 {
-    static Byte blackRGB[] = { 0,0,0,0 };
-    const int bitsPerPixel        = numberOfColors==2 ? 1 : 8;
-    const int bitsPerComponent    = numberOfColors==2 ? 5 : 8;
+    const int bitsPerComponent    = bitsPerPixel==1 ? 5 : 8;
+    const int numberOfColors      = 1<<bitsPerPixel;
     const int useGlobalColorTable = 1; /* use GLOBAL color table */
     const int backgroundColor     = 0; /* background = index 0 */
     const int aspectRatio         = 0; /* No aspect ratio info is given */
-    int flags,i; const Byte *rgb, *last;
+    int flags;
     assert( width>0 && height>0 );
-    assert( numberOfColors==2 || numberOfColors==256 );
+    assert( bitsPerPixel==1 || bitsPerPixel==8 );
     flags = useGlobalColorTable<<7 | (bitsPerComponent-1)<<4 | (bitsPerPixel-1);
     
     /* write signature */
@@ -89,12 +154,7 @@ static Bool fwriteHeader(int         width,
     fwriteInt8 (backgroundColor, file);
     fwriteInt8 (aspectRatio    , file);
     /* write color table */
-    rgb  = colorTable;
-    last = &rgb[colorTableSize-4];
-    for (i=0; i<numberOfColors; ++i) {
-        if (rgb<=last) { fwriteRGB(rgb,file); rgb+=4; }
-        else           { fwriteRGB(blackRGB,file);    }
-    }
+    fwritePaletteBGRA(colorTable, colorTableSize, numberOfColors, file);
     return TRUE;
 }
 
@@ -102,21 +162,20 @@ static Bool fwriteHeader(int         width,
  * Writes the GIF image descriptor to the specified file
  * @param width            The width of the image in pixels
  * @param height           The height of the image in pixels
- * @param numberOfColors   The number of colors of the image (valid values: 2 or 256)
+ * @param bitsPerPixel     The number of bits for each pixel (valid values: 1 or 8)
  * @param file             The output file where the descriptor will be stored
  */
 static Bool fwriteImageDescriptor(int   width,
                                   int   height,
-                                  int   numberOfColors,
-                                  FILE *file)
+                                  int   bitsPerPixel,
+                                  FILE* file)
 {
     const int useLocalColorTable = 0; /* not use local color table */
     const int interlace          = 0; /* image is NOT interlaced   */
     const int sorted             = 0; /* color table is NOT sorted */
-    const int bitsPerPixel = numberOfColors==2 ? 1 : 8;
     int fields;
     assert( width>0 && height>0 );
-    assert( numberOfColors==2 || numberOfColors==256 );
+    assert( bitsPerPixel==2 || bitsPerPixel==8 );
     fields = useLocalColorTable<<7 | interlace<<6 | sorted<<5 | (bitsPerPixel-1);
 
     /* write image descriptor */
@@ -129,6 +188,56 @@ static Bool fwriteImageDescriptor(int   width,
     return TRUE;
 }
 
+static Bool fwriteLzwImage(int         width,
+                           int         height,
+                           int         scanlineSize,
+                           int         bitsPerPixel,
+                           const void* pixelData,
+                           int         pixelDataSize,
+                           FILE*       file)
+{
+    int x,y;
+    const int      minCodeSize = bitsPerPixel>2 ? bitsPerPixel : 2;
+    const unsigned clearCode   = 1 << bitsPerPixel;
+    int curCode = -1;
+    unsigned codeSize = minCodeSize+1;
+    /* unsigned maxCode  = clearCode+1; */
+    BitBuffer buffer;
+    const Byte* pixels;
+    unsigned nextValue;
+    
+    assert( width>0 && height>0 );
+    assert( /* bitsPerPixel==1 || */ bitsPerPixel==8 );
+    
+
+    pixels = (const Byte*)pixelData;
+    initBitBuffer(&buffer);
+    fputc(minCodeSize,file);
+    
+    
+    for (y=0; y<height; ++y) {
+        for (x=0; x<width; ++x) {
+            
+            nextValue = pixels[y*scanlineSize + x];
+            
+            /* testing with no compression */
+            fwriteCode(nextValue, codeSize,  &buffer,file);
+            fwriteCode(      256, codeSize,  &buffer,file);
+            
+            
+            
+            
+        }
+    }
+    
+    fwriteCode( curCode    , codeSize     ,  &buffer,file);
+    fwriteCode( clearCode  , codeSize     ,  &buffer,file);
+    fwriteCode( clearCode+1, minCodeSize+1,  &buffer,file);
+    flushBitBuffer(&buffer, file);
+    fputc(0, file);
+    return TRUE;
+}
+
 
 /*=================================================================================================================*/
 #pragma mark - > PUBLIC FUNCTIONS
@@ -137,27 +246,34 @@ static Bool fwriteImageDescriptor(int   width,
  * Writes an image to file using the GIF format
  * @param width           The width of the image in pixels
  * @param height          The height of the image in pixels
- * @param scanlineSize    The number of bytes from one line of pixels to the next
- * @param numberOfColors  The number of colors of the image (valid values: 2 or 256)
+ * @param scanlineSize    The number of bytes from one line of pixels to the next (negative = upside-down image)
+ * @param bitsPerPixel    The number of bits for each pixel (valid values: 1 or 8)
  * @param colorTable      An array of RGBA elements (32bits) that maps the values in the pixel-data to rgb colors
  * @param colorTableSize  The size of `colorTable` in number of BYTES
  * @param pixelData       An array of values describing each pixel of the image
  * @param pixelDataSize   The size of `pixelData` in number of BYTES
+ * @param file            The output file where the image will be written
  */
-Bool fwriteGif(int width, int height, int scanlineSize, int numberOfColors,
-               const void *colorTable, int colorTableSize,
-               const void *pixelData,  int pixelDataSize,
-               FILE *file)
+Bool fwriteGif(int         width,
+               int         height,
+               int         scanlineSize,
+               int         bitsPerPixel,
+               const void* colorTable,
+               int         colorTableSize,
+               const void* pixelData,
+               int         pixelDataSize,
+               FILE*       file)
 {
-    assert( width >0 );
-    assert( height>0 );
-    assert( numberOfColors==2 || numberOfColors==256 );
+    assert( width>0 && height>0 );
+    assert( scanlineSize>=(width*bitsPerPixel/8) );
+    assert( bitsPerPixel==1 || bitsPerPixel==8 );
+    assert( colorTable!=NULL && colorTableSize>0 );
+    assert( pixelData!=NULL && pixelDataSize>0 );
     assert( file!=NULL );
     
-    fwriteHeader(width, height, numberOfColors, colorTable, colorTableSize, file);
-    fwriteImageDescriptor(width, height, numberOfColors, file);
-    fwriteLzwImage(width, height, numberOfColors, pixelData, pixelDataSize, file);
-
+    fwriteHeader(width, height, bitsPerPixel, colorTable, colorTableSize, file);
+    fwriteImageDescriptor(width, height, bitsPerPixel, file);
+    fwriteLzwImage(width, height, scanlineSize, bitsPerPixel, pixelData, pixelDataSize, file);
     return TRUE;
 }
 

@@ -50,15 +50,45 @@ typedef struct BmpHeader {
     unsigned scanlineSize;
 } BmpHeader;
 
-int getBmpScanlineSize(int width, int numberOfColors);
+/**
+ * Returns the exact number of bytes from one line of pixels to the next
+ *
+ * The BMP format needs the scanline's length to be a multiple of 4, this
+ * function calculates that value based on the bmp width (in pixels) and
+ * the number of bits of each pixel.
+ * @param width         The width of the image in pixels
+ * @param bitsPerPixel  The number of bits for each pixel
+ */
+int getBmpScanlineSize2(int width, int bitsPerPixel);
 
-Bool setBmpHeader(BmpHeader *header, int width, int height, int numberOfColors);
+/**
+ * Fills the BmpHeader structure with data that was read from a file
+ * @param header      The BmpHeader structure to fill
+ * @param data        A buffer containing data that was read from a BMP file
+ * @param dataSize    The size of `data` in number of BYTES
+ */
+Bool fillBmpHeader(BmpHeader *header, const void* data, long dataSize);
 
-Bool extractBmpHeader(BmpHeader *header, const void* data, long dataSize);
-
-Bool fwriteBmp(const BmpHeader *header,
-               const void      *colorTable, int colorTableSize,
-               const void      *pixelData , int pixelDataSize,
-               FILE *file);
+/**
+ * Writes an image to file using the BMP format
+ * @param width           The width of the image in pixels
+ * @param height          The height of the image in pixels
+ * @param scanlineSize    The number of bytes from one line of pixels to the next (negative = upside-down image)
+ * @param bitsPerPixel    The number of bits for each pixel (valid values: 1 or 8)
+ * @param colorTable      An array of RGBA elements (32bits) that maps the values in the pixel-data to rgb colors
+ * @param colorTableSize  The size of `colorTable` in number of BYTES
+ * @param pixelData       An array of values describing each pixel of the image
+ * @param pixelDataSize   The size of `pixelData` in number of BYTES
+ * @param file            The output file where the image will be written
+ */
+Bool fwriteBmp(int         width,
+               int         height,
+               int         scanlineSize,
+               int         bitsPerPixel,
+               const void* colorTable,
+               int         colorTableSize,
+               const void* pixelData,
+               int         pixelDataSize,
+               FILE*       file);
 
 #endif /* bas2img_bmp_h */

@@ -134,8 +134,8 @@ static Bool writeCArrayFromBitmapFile(FILE       *outputFile,
             error(ERR_CANNOT_READ_FILE,imageFilePath);
         }
     }
-    if (success) { /* 3) extract bitmap header */
-        if (!extractBmpHeader(&bmp, imageBuffer, imageFileSize)) { error(ERR_FILE_IS_NOT_BMP,0); }
+    if (success) { /* 3) fill the bitmap header structure using the data loaded from file */
+        if (!fillBmpHeader(&bmp, imageBuffer, imageFileSize)) { error(ERR_FILE_IS_NOT_BMP,0); }
     }
     if (success) { /* 4) verify correct bitmap format */
         pixelDataSize    = (unsigned)imageFileSize-bmp.pixelDataOffset;

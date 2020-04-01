@@ -53,7 +53,15 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "export-font msx"
+            argument = "#msx EXAMPLE.ASC"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "#msx --gif EXAMPLE.ASC"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "export-font &apos;!msx&apos;"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
@@ -62,18 +70,14 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "list-computers -h"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "list-fonts"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "#msx demons.bas"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "#msx -c 6 -w 60 $HOME/Development/Retro/msx-10liner/02_ALIENS10/ALIENS10.BAS"
+            argument = "#msx -c 6 -w 60 EXAMPLE.ASC"
             isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>

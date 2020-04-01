@@ -92,10 +92,13 @@ static Bool generateImageFromRows(FILE           *outputFile,
         y+=charHeight;
     }
     
-    fwriteBmpImage(image,outputFile);
+    switch (config->imageFormat) {
+        default:
+        case GIF: fwriteGifImage(image,outputFile); break;
+        case BMP: fwriteBmpImage(image,outputFile); break;
+    }
     freeImage(image);
-    
-    return FALSE;
+    return TRUE;
 }
 
 /**
@@ -144,7 +147,6 @@ Bool generateImageFromBASIC(const utf8     *imageFilePath,
     Byte *basicBuffer=NULL; long basicBufferSize=0;
     
     assert( basicFilePath!=NULL && config!=NULL );
-    if (config->imageFormat==GIF) { return error(ERR_GIF_NOT_SUPPORTED,0); }
     
     /* add extensions (when appropiate) */
     basicFilePath = allocFilePath(basicFilePath, ".bas", OPTIONAL_EXTENSION);
