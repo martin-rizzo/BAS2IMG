@@ -64,10 +64,34 @@ const utf8 * allocConcatenation(const utf8 *firstString, const utf8 *secondStrin
 
 const utf8 * allocFilePath(const utf8* originalFilePath, const utf8* newExtension, ExtensionMethod method);
 
-const utf8 * allocFileNameWithoutExtension(const utf8 *originalFilePath);
 
-const utf8 * allocStringWithoutPrefix(const utf8 *string, const utf8 *prefixToRemove);
+/**
+ * Allocates a string containing the name and extension of the file indicated by the path
+ * @param filePath  The path to the file
+ * @returns
+ *      A new allocated string containing the name and extension,
+ *      it must be deallocated with 'free()'
+ */
+const utf8 * allocFileNameWithExtension(const utf8* filePath);
 
+/**
+ * Allocates a string containing the name (without extension) of the file indicated by the path
+ * @param filePath  The path to the file
+ * @returns
+ *      A new allocated string containing the name (without extension),
+ *      it must be deallocated with 'free()'
+ */
+const utf8 * allocFileNameWithoutExtension(const utf8* filePath);
+
+/**
+ * Allocates a string containing the provided string but with the prefix removed
+ * @param originalString   The string that the prefix will be removed
+ * @param prefixToRemove   The prefix to remove
+ * @returns
+ *      A new allocated string containing the original string but with the prefix removed,
+ *      it must be deallocated with 'free()'
+ */
+const utf8 * allocStringWithoutPrefix(const utf8 *originalString, const utf8 *prefixToRemove);
 
 /**
  * Returns the first positive value from the provided list of values

@@ -117,26 +117,50 @@ const utf8* allocFilePath(const utf8* originalFilePath, const utf8* newExtension
     return fileName;
 }
 
-
-const utf8 * allocFileNameWithoutExtension(const utf8 *originalFilePath) {
-    size_t length;
-    const utf8 *begin, *end, *ptr; utf8 *fileName;
-    assert( originalFilePath!=NULL );
+/**
+ * Allocates a string containing the name and extension of the file indicated by the path
+ * @param filePath  The path to the file
+ * @returns
+ *      A new allocated string containing the name and extension,
+ *      it must be deallocated with 'free()'
+ */
+const utf8 * allocFileNameWithExtension(const utf8* filePath) {
+    const utf8 *begin, *ptr;
+    assert( filePath!=NULL );
     
-    begin = originalFilePath;
-    end   = NULL;
-    for (ptr=originalFilePath; *ptr!='\0'; ++ptr) {
+    for (ptr=begin=filePath; *ptr!='\0'; ++ptr) {
+        if (*ptr==DIR_SEPARATOR1 || *ptr==DIR_SEPARATOR2) { begin=ptr+1; }
+    }
+    return memdup(begin,(ptr-begin)+1);
+}
+
+/**
+ * Allocates a string containing the name (without extension) of the file indicated by the path
+ * @param filePath  The path to the file
+ * @returns
+ *      A new allocated string containing the name (without extension),
+ *      it must be deallocated with 'free()'
+ */
+const utf8 * allocFileNameWithoutExtension(const utf8* filePath) {
+    const utf8 *begin, *end, *ptr;
+    assert( filePath!=NULL );
+    
+    end=NULL; for (ptr=begin=filePath; *ptr!='\0'; ++ptr) {
         if (*ptr==DIR_SEPARATOR1 || *ptr==DIR_SEPARATOR2) { begin=ptr+1; }
         else if (*ptr==EXT_SEPARATOR)                     { end=ptr;     }
     }
     if (end==NULL) { end=ptr; }
-    
-    length   = (end-begin);
-    fileName = memdup(begin,length+1);
-    fileName[length] = '\0';
-    return fileName;
+    return memdup(begin,(end-begin)+1);
 }
 
+/**
+ * Allocates a string containing the provided string but with the prefix removed
+ * @param originalString   The string that the prefix will be removed
+ * @param prefixToRemove   The prefix to remove
+ * @returns
+ *      A new allocated string containing the original string but with the prefix removed,
+ *      it must be deallocated with 'free()'
+ */
 const utf8 * allocStringWithoutPrefix(const utf8 *originalString, const utf8 *prefixToRemove) {
     const utf8 *begin, *ptr, *prefix;
     assert( originalString!=NULL && prefixToRemove!=NULL );
