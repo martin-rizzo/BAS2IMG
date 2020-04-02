@@ -203,17 +203,17 @@ Bool fwriteBmp(int         width,
 {
     BmpHeader header;
     assert( width>0 && height>0 );
-    assert( scanlineSize==getBmpScanlineSize2(width,bitsPerPixel) );
+    assert( scanlineSize!=0 );
     assert( bitsPerPixel==1 || bitsPerPixel==8 );
     assert( colorTable!=NULL && colorTableSize>0 );
     assert( pixelData!=NULL && pixelDataSize>0 );
     assert( file!=NULL );
     
-    /* handle upside-down image */
-    if (scanlineSize<0) {
-        height       = -height;
-        scanlineSize = -scanlineSize;
-    }
+    /* handle "upside-down" images */
+    if (scanlineSize<0) { scanlineSize=-scanlineSize; }
+    else                { height=-height; }
+    assert( scanlineSize==getBmpScanlineSize2(width,bitsPerPixel) );
+
     /* generate bmp-header and check if provided `scanlineSize` matches with BMP format */
     initBmpHeader(&header, width, height, bitsPerPixel);
     assert( header.scanlineSize==scanlineSize );

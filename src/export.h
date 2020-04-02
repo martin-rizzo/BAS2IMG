@@ -40,9 +40,10 @@
  * The image is stored in the current working directory and the name
  * of the file is generated concatenating a suffix with the font name.
  * @param font         The font to export
+ * @param imageFormat  The format of the exported image, ex: GIF, BMP, ...
  * @param orientation  The order of characters in the image (vertical slices, horizontal slices)
  */
-Bool exportFont(const Font *font, Orientation orientation);
+Bool exportFont(const Font *font, ImageFormat imageFormat, Orientation orientation);
 
 
 

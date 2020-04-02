@@ -53,15 +53,19 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "#msx EXAMPLE.ASC"
+            argument = "#msx --gif EXAMPLE.ASC"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "#msx --gif EXAMPLE.ASC"
+            argument = "#msx --bmp EXAMPLE.ASC"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "export-font &apos;!msx&apos;"
+            argument = "export-font --gif &apos;!msx&apos;"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "export-font --bmp &apos;!msx&apos;"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument

@@ -175,7 +175,7 @@ static Bool fwriteImageDescriptor(int   width,
     const int sorted             = 0; /* color table is NOT sorted */
     int fields;
     assert( width>0 && height>0 );
-    assert( bitsPerPixel==2 || bitsPerPixel==8 );
+    assert( bitsPerPixel==1 || bitsPerPixel==8 );
     fields = useLocalColorTable<<7 | interlace<<6 | sorted<<5 | (bitsPerPixel-1);
 
     /* write image descriptor */
@@ -188,6 +188,16 @@ static Bool fwriteImageDescriptor(int   width,
     return TRUE;
 }
 
+/**
+ * Writes the pixel data of a GIF image using LZW compression
+ * @param width           The width of the image in pixels
+ * @param height          The height of the image in pixels
+ * @param scanlineSize    The number of bytes from one line of pixels to the next (negative = upside-down image)
+ * @param bitsPerPixel    The number of bits for each pixel (valid values: 1 or 8)
+ * @param pixelData       An array of values describing each pixel of the image
+ * @param pixelDataSize   The size of `pixelData` in number of BYTES
+ * @param file            The output file where the image will be written
+ */
 static Bool fwriteLzwImage(int         width,
                            int         height,
                            int         scanlineSize,
@@ -196,43 +206,49 @@ static Bool fwriteLzwImage(int         width,
                            int         pixelDataSize,
                            FILE*       file)
 {
-    int x,y;
-    const int      minCodeSize = bitsPerPixel>2 ? bitsPerPixel : 2;
-    const unsigned clearCode   = 1 << bitsPerPixel;
-    int curCode = -1;
-    unsigned codeSize = minCodeSize+1;
-    /* unsigned maxCode  = clearCode+1; */
+    int x,y; Bool upsideDown=FALSE;
+    const unsigned initialCodeSize  = (bitsPerPixel>2) ? bitsPerPixel : 2;
+    const unsigned clearCode        = 1 << initialCodeSize;
+    const unsigned endOfInformation = clearCode+1;
+    unsigned codeSize = initialCodeSize+1;
+    unsigned code     = -1;
+    unsigned nextCode;
+
     BitBuffer buffer;
-    const Byte* pixels;
-    unsigned nextValue;
+    const Byte *pixels, *scanline;
     
     assert( width>0 && height>0 );
-    assert( /* bitsPerPixel==1 || */ bitsPerPixel==8 );
+    assert( bitsPerPixel==1 || /* bitsPerPixel==4 ||*/ bitsPerPixel==8 );
     
-
-    pixels = (const Byte*)pixelData;
+    /* handle "upside-down" images */
+    if ( scanlineSize<0 ) { scanlineSize=-scanlineSize; upsideDown=TRUE; }
+    assert( scanlineSize>=(width*bitsPerPixel/8) );
+    
     initBitBuffer(&buffer);
-    fputc(minCodeSize,file);
+    fputc(initialCodeSize,file);
     
-    
+    pixels = (const Byte*)pixelData;
     for (y=0; y<height; ++y) {
+        scanline = &pixels[ scanlineSize * (upsideDown ? (height-y-1) : y) ];
         for (x=0; x<width; ++x) {
             
-            nextValue = pixels[y*scanlineSize + x];
-            
-            /* testing with no compression */
-            fwriteCode(nextValue, codeSize,  &buffer,file);
-            fwriteCode(      256, codeSize,  &buffer,file);
-            
-            
-            
+            /* get pixel color at position x,y */
+            switch (bitsPerPixel) {
+                default:
+                case 8: nextCode = scanline[x]; break;
+              /*case 4: nextCode = scanline[x/2]>>(4*(~x&1)) & 0x0F; break;*/
+                case 1: nextCode = scanline[x/8]>>(~x&7)     & 0x01; break;
+            }
+            /* writting with no compression */
+            fwriteCode( nextCode, codeSize,  &buffer,file);
+            fwriteCode(clearCode, codeSize,  &buffer,file);
             
         }
     }
     
-    fwriteCode( curCode    , codeSize     ,  &buffer,file);
-    fwriteCode( clearCode  , codeSize     ,  &buffer,file);
-    fwriteCode( clearCode+1, minCodeSize+1,  &buffer,file);
+    /* fwriteCode( code       , codeSize        ,  &buffer,file); */
+    /* fwriteCode( clearCode  , codeSize        ,  &buffer,file); */
+    fwriteCode( endOfInformation, initialCodeSize,  &buffer,file);
     flushBitBuffer(&buffer, file);
     fputc(0, file);
     return TRUE;
@@ -265,7 +281,7 @@ Bool fwriteGif(int         width,
                FILE*       file)
 {
     assert( width>0 && height>0 );
-    assert( scanlineSize>=(width*bitsPerPixel/8) );
+    assert( scanlineSize!=0 );
     assert( bitsPerPixel==1 || bitsPerPixel==8 );
     assert( colorTable!=NULL && colorTableSize>0 );
     assert( pixelData!=NULL && pixelDataSize>0 );

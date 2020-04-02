@@ -83,30 +83,38 @@ static void exportFontToImageBuffer(Byte*       buffer,
  * Writes the font image to the provided file using BMP format
  * @param outputFile      The file where the font image will be written
  * @param outputFilePath  The path to file where the font image will be written (only used for error report)
+ * @param imageFormat     The format of the exported image, ex: GIF, BMP, ...
  * @param orientation     The order of characters in the image (vertical slices, horizontal slices)
  * @param font            The font to export
  */
-static Bool exportFontToBmpFile(FILE         *outputFile,
-                                const utf8   *outputFilePath,
+static Bool exportFontToBmpFile(FILE*        outputFile,
+                                const utf8*  outputFilePath,
+                                ImageFormat  imageFormat,
                                 Orientation  orientation,
-                                const Font   *font)
+                                const Font*  font)
 {
     int scanlineSize=0,pixelDataSize=0; Byte* pixelData=NULL;
     static const Byte colorTable[] = { 255,255,255,0,  0,0,0,0 };
     
-    if (success) { /* 1) generate font image in buffer */
+    if (success) { /* 1) generate the font image in a buffer */
         scanlineSize  = getBmpScanlineSize2(FONT_IMG_WIDTH, FONT_IMG_BITSPERPIXEL);
         pixelDataSize = FONT_IMG_HEIGHT * scanlineSize;
         pixelData     = malloc( pixelDataSize );
         exportFontToImageBuffer(pixelData, pixelDataSize, -scanlineSize, orientation, font);
     }
-    if (success) { /* 2) write font image buffer into a file */
-        if (!fwriteBmp(FONT_IMG_WIDTH, FONT_IMG_HEIGHT, scanlineSize, FONT_IMG_BITSPERPIXEL,
+    if (success && imageFormat==GIF) { /* 2a) write font image buffer into a GIF file */
+        if (!fwriteGif(FONT_IMG_WIDTH, FONT_IMG_HEIGHT, -scanlineSize, FONT_IMG_BITSPERPIXEL,
                        colorTable, sizeof(colorTable),
                        pixelData, pixelDataSize,
-                       outputFile)) {
-            error(ERR_CANNOT_WRITE_FILE,outputFilePath);
-        }
+                       outputFile))
+        { error(ERR_CANNOT_WRITE_FILE,outputFilePath); }
+    }
+    if (success && imageFormat==BMP) { /* 2a) write font image buffer into a BMP file */
+        if (!fwriteBmp(FONT_IMG_WIDTH, FONT_IMG_HEIGHT, -scanlineSize, FONT_IMG_BITSPERPIXEL,
+                       colorTable, sizeof(colorTable),
+                       pixelData, pixelDataSize,
+                       outputFile))
+        { error(ERR_CANNOT_WRITE_FILE,outputFilePath); }
     }
     free(pixelData);
     return success ? TRUE : FALSE;
@@ -118,16 +126,19 @@ static Bool exportFontToBmpFile(FILE         *outputFile,
  * The image is stored in the current working directory and the name
  * of the file is generated concatenating a suffix with the font name.
  * @param font         The font to export
+ * @param imageFormat  The format of the exported image, ex: GIF, BMP, ...
  * @param orientation  The order of characters in the image (vertical slices, horizontal slices)
  */
-Bool exportFont(const Font *font, Orientation orientation) {
-    const utf8 *outputFilePath=NULL, *outputFileName=NULL;  FILE *outputFile=NULL;
+Bool exportFont(const Font *font, ImageFormat imageFormat, Orientation orientation) {
+    const utf8 *outputFilePath=NULL, *outputFileName=NULL, *imageExtension;
+    FILE *outputFile=NULL;
     assert( font!=NULL );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
 
     if (success) {
+        imageExtension = getImageExtension(imageFormat,NULL);
         outputFileName = allocConcatenation(FONT_IMG_PREFIX, font->name);
-        outputFilePath = allocFilePath(outputFileName, ".bmp", FORCED_EXTENSION);
+        outputFilePath = allocFilePath(outputFileName, imageExtension, FORCED_EXTENSION);
         if (!outputFileName || !outputFileName) { error(ERR_NOT_ENOUGH_MEMORY,0); }
     }
     if (success) {
@@ -136,7 +147,7 @@ Bool exportFont(const Font *font, Orientation orientation) {
     }
     if (success) {
         printf("Exporting font %s to file '%s'\n", font->name, outputFilePath);
-        exportFontToBmpFile(outputFile, outputFilePath, orientation, font);
+        exportFontToBmpFile(outputFile, outputFilePath, imageFormat, orientation, font);
     }
     /* clean up and return */
     if (outputFile) { fclose(outputFile); }
