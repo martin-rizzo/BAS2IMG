@@ -31,7 +31,7 @@
  */
 #ifndef bas2img_generate_h
 #define bas2img_generate_h
-#include "types.h"
+#include "globals.h"
 
 
 /**

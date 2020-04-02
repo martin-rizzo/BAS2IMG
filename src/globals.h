@@ -1,5 +1,5 @@
 /**
- * @file       types.h
+ * @file       globals.h
  * @date       Feb 15, 2020
  * @author     Martin Rizzo | <martinrizzo@gmail.com>
  * @copyright  Copyright (c) 2020 Martin Rizzo.
@@ -29,24 +29,38 @@
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * -------------------------------------------------------------------------
  */
-#ifndef bas2img_types_h
-#define bas2img_types_h
+#ifndef bas2img_globals_h
+#define bas2img_globals_h
+
+/*=================================================================================================================*/
+#pragma mark - > CONSTANTS
+
+#define MIN_FILE_SIZE         (0)           /* < minimum size for loadable files (in bytes)       */
+#define MAX_FILE_SIZE         (1024L*1024L) /* < maximum size for loadable files (in bytes)       */
+#define LINE_BUF_SIZE         512           /* < length of buffer used to decode lines of BASIC   */
+#define CHAR_IMG_WIDTH        8             /* < width  of each font character (in pixels)        */
+#define CHAR_IMG_HEIGHT       8             /* < height of each font character (in pixels)        */
+#define FONT_IMG_WIDTH        128           /* < font-image width (in pixels)                     */
+#define FONT_IMG_HEIGHT       128           /* < font-image height (in pixels)                    */
+#define FONT_IMG_BITSPERPIXEL 1             /* < font-image is 1 bit per pixel (black & white)    */
+#define FONT_IMG_PREFIX       "font__"      /* < font-image file prefix used when exporting fonts */
+#define MIN_DECODE_BUF_SIZE   32            /* < The smaller buffer size guaranteed when decoding BASIC lines */
 
 
-/* generic simple types */
+/*=================================================================================================================*/
+#pragma mark - > GENERIC SIMPLE TYPES
 
-typedef          char utf8;               /* < unicode variable width character encoding                        */
-typedef unsigned char Byte;               /* < a 8-bits unsigned value (0,255)                                  */
+typedef          char utf8;               /* < unicode variable width character encoding  */
+typedef unsigned char Byte;               /* < a 8-bits unsigned value (0,255)            */
+typedef int Bool; enum { FALSE=0, TRUE }; /* < a boolean value (TRUE/FALSE)               */
+
+
+/*=================================================================================================================*/
+#pragma mark - > BAS2IMG TYPES
+
 typedef unsigned char Char256;            /* < one of 256 characters defined in the home computer character-set */
-typedef int Bool; enum { FALSE=0, TRUE }; /* < a boolean value (TRUE/FALSE)                                     */
-
-/* bas2img simple types */
-
 typedef enum ImageFormat { BMP, GIF             } ImageFormat;
 typedef enum Orientation { HORIZONTAL, VERTICAL } Orientation;
-
-
-/* bas2img more complex types */
 
 /**
  * Prototype of function used to verify if a stream of bytes can be decoded to BASIC lines
@@ -54,11 +68,6 @@ typedef enum Orientation { HORIZONTAL, VERTICAL } Orientation;
  * @param sourLen  The source buffer length in number of bytes
  */
 typedef Bool (*IsDecodableFunc)(const Byte *sour, int sourLen);
-
-/**
- * The smaller buffer size guaranteed when decoding BASIC lines
- */
-#define MIN_DECODE_BUF_SIZE 32
 
 /**
  * Prototype of function used to decode basic lines
@@ -70,7 +79,6 @@ typedef Bool (*IsDecodableFunc)(const Byte *sour, int sourLen);
  * @param sourLen      The source buffer length in number of bytes (always greater than zero)
  */
 typedef Bool (*DecodeFunc)(Byte **inout_dest, const Byte **inout_sour, int sourLen);
-
 
 
 
@@ -116,5 +124,5 @@ typedef struct Config {
 } Config;
 
 
-#endif /* bas2img_types_h */
+#endif /* bas2img_globals_h */
 

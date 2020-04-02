@@ -31,7 +31,7 @@
  */
 #ifndef bas2img_error_h
 #define bas2img_error_h
-#include "types.h"
+#include "globals.h"
 
 
 /* supported errors */

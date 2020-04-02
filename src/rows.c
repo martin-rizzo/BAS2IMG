@@ -32,7 +32,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include "bas2img.h"
+#include "globals.h"
 #include "rows.h"
 #define min(a,b)  ((a)<(b) ? (a) : (b))
 #define MAX_COLUMN (LINE_BUF_SIZE-MIN_DECODE_BUF_SIZE)

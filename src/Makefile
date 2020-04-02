@@ -6,10 +6,10 @@ DECOS_DIR = ./decos
 FONTS_DIR = ./fonts
 
 ## files ##
-HEADERS  = bas2img.h types.h helpers.h error.h rows.h database.h generate.h import.h export.h image.h gif.h bmp.h
+HEADERS  = globals.h helpers.h error.h rows.h database.h generate.h import.h export.h image.h gif.h bmp.h
 DECOS    = d-atari d-msx d-msxasc
 FONTS    = f-atari f-msx f-msxdin
-SOURCES  = bas2img helpers error rows database generate import export image gif bmp
+SOURCES  = main helpers error rows database generate import export image gif bmp
 TARGET_RELEASE = $(BIN_DIR)/bas2img
 TARGET_DEBUG   = $(BIN_DIR)/bas2img_d
 

@@ -1,4 +1,4 @@
-#include "../types.h"
+#include "../globals.h"
 
 /** MSX German DIN font, identical to default font but has a dotted zero */
 const Font font_msxdin = {

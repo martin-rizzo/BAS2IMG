@@ -32,7 +32,7 @@
 #ifndef bas2img_image_h
 #define bas2img_image_h
 #include <stdio.h>
-#include "types.h"
+#include "globals.h"
 
 
 typedef struct Image {

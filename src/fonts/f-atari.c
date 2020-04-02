@@ -1,4 +1,4 @@
-#include "../types.h"
+#include "../globals.h"
 
 /** Atari ATASCII font, used in 8 bits atari computers */
 const Font font_atari = {

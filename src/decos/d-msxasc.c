@@ -31,7 +31,7 @@
  */
 #include <assert.h>
 #include <stdlib.h>
-#include "../types.h"
+#include "../globals.h"
 
 #define LF       0x0A  /* line feed             */
 #define CR       0x0D  /* carriage return       */

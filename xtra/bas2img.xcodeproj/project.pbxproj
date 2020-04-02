@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5B0F006123F872AD00A1D6D1 /* bas2img.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B0F005F23F872AD00A1D6D1 /* bas2img.c */; };
+		5B0F006123F872AD00A1D6D1 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B0F005F23F872AD00A1D6D1 /* main.c */; };
 		5B23CDAD23FC3FD200C628E5 /* bmp.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B23CDAA23FC3FD200C628E5 /* bmp.c */; };
 		5B23CDAE23FC3FD200C628E5 /* gif.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B23CDAB23FC3FD200C628E5 /* gif.c */; };
 		5B77D84E23FE0C7B007C7085 /* export.c in Sources */ = {isa = PBXBuildFile; fileRef = 5B77D84D23FE0C7B007C7085 /* export.c */; };
@@ -40,21 +40,20 @@
 
 /* Begin PBXFileReference section */
 		5B0F005E23F872AD00A1D6D1 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		5B0F005F23F872AD00A1D6D1 /* bas2img.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bas2img.c; sourceTree = "<group>"; };
+		5B0F005F23F872AD00A1D6D1 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		5B23CDA923FC3FD100C628E5 /* bmp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bmp.h; sourceTree = "<group>"; };
 		5B23CDAA23FC3FD200C628E5 /* bmp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bmp.c; sourceTree = "<group>"; };
 		5B23CDAB23FC3FD200C628E5 /* gif.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gif.c; sourceTree = "<group>"; };
 		5B23CDAC23FC3FD200C628E5 /* gif.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gif.h; sourceTree = "<group>"; };
 		5B77D84C23FE0C7B007C7085 /* export.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = export.h; sourceTree = "<group>"; };
 		5B77D84D23FE0C7B007C7085 /* export.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = export.c; sourceTree = "<group>"; };
-		5B77D84F23FE0D5B007C7085 /* bas2img.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bas2img.h; sourceTree = "<group>"; };
 		5B77D85023FE0F0E007C7085 /* helpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = helpers.h; sourceTree = "<group>"; };
 		5B77D85123FE0F0F007C7085 /* helpers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = helpers.c; sourceTree = "<group>"; };
 		5B77D85323FE1374007C7085 /* error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = error.h; sourceTree = "<group>"; };
 		5B77D85423FE1374007C7085 /* error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = error.c; sourceTree = "<group>"; };
 		5B77D85623FE15FF007C7085 /* import.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = import.c; sourceTree = "<group>"; };
 		5B77D85723FE15FF007C7085 /* import.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = import.h; sourceTree = "<group>"; };
-		5B77D85B23FE1F6E007C7085 /* types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		5B77D85B23FE1F6E007C7085 /* globals.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = globals.h; sourceTree = "<group>"; };
 		5BD09F28240450F500DF6D4D /* image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = image.c; sourceTree = "<group>"; };
 		5BD09F29240450F500DF6D4D /* image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = image.h; sourceTree = "<group>"; };
 		5BD0E30623F871850013F982 /* bas2img */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bas2img; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -88,9 +87,7 @@
 			children = (
 				5BE419812401B681000D141D /* decos */,
 				5BE4197D2401B605000D141D /* fonts */,
-				5B77D84F23FE0D5B007C7085 /* bas2img.h */,
-				5B0F005F23F872AD00A1D6D1 /* bas2img.c */,
-				5B77D85B23FE1F6E007C7085 /* types.h */,
+				5B77D85B23FE1F6E007C7085 /* globals.h */,
 				5B77D85023FE0F0E007C7085 /* helpers.h */,
 				5B77D85123FE0F0F007C7085 /* helpers.c */,
 				5B77D85323FE1374007C7085 /* error.h */,
@@ -111,6 +108,7 @@
 				5B23CDAA23FC3FD200C628E5 /* bmp.c */,
 				5B23CDAC23FC3FD200C628E5 /* gif.h */,
 				5B23CDAB23FC3FD200C628E5 /* gif.c */,
+				5B0F005F23F872AD00A1D6D1 /* main.c */,
 				5B0F005E23F872AD00A1D6D1 /* Makefile */,
 			);
 			name = src;
@@ -216,7 +214,7 @@
 				5BEBC7482403440200625A77 /* rows.c in Sources */,
 				5BE4198D2401DA4B000D141D /* d-atari.c in Sources */,
 				5B77D85223FE0F0F007C7085 /* helpers.c in Sources */,
-				5B0F006123F872AD00A1D6D1 /* bas2img.c in Sources */,
+				5B0F006123F872AD00A1D6D1 /* main.c in Sources */,
 				5BE4198C2401DA4B000D141D /* d-msxasc.c in Sources */,
 				5BD09F2A240450F500DF6D4D /* image.c in Sources */,
 				5BE4199724020F25000D141D /* generate.c in Sources */,

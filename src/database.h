@@ -31,7 +31,7 @@
  */
 #ifndef bas2img_database_h
 #define bas2img_database_h
-#include "types.h"
+#include "globals.h"
 
 
 /**

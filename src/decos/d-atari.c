@@ -1,6 +1,6 @@
 
 #include <stdlib.h>
-#include "../types.h"
+#include "../globals.h"
 
 const Decoder decoder_atari = { "atari", "Atari decoder", NULL, NULL };
 

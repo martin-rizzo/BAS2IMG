@@ -1,4 +1,4 @@
-#include "../types.h"
+#include "../globals.h"
 
 /** MSX default font */
 const Font font_msx = {

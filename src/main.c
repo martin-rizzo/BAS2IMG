@@ -1,5 +1,5 @@
 /**
- * @file       bas2img.c
+ * @file       main.c
  * @date       Feb 15, 2020
  * @author     Martin Rizzo | <martinrizzo@gmail.com>
  * @copyright  Copyright (c) 2020 Martin Rizzo.
@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "bas2img.h"
+#include "globals.h"
 #include "helpers.h"
 #include "error.h"
 #include "database.h"

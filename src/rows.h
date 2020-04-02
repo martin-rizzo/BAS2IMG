@@ -31,7 +31,7 @@
  */
 #ifndef bas2img_rows_h
 #define bas2img_rows_h
-#include "types.h"
+#include "globals.h"
 
 
 typedef struct SingleRow {

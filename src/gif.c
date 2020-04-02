@@ -211,7 +211,7 @@ static Bool fwriteLzwImage(int         width,
     const unsigned clearCode        = 1 << initialCodeSize;
     const unsigned endOfInformation = clearCode+1;
     unsigned codeSize = initialCodeSize+1;
-    unsigned code     = -1;
+  /*unsigned code     = -1; */
     unsigned nextCode;
 
     BitBuffer buffer;

@@ -32,9 +32,10 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "bas2img.h"
+#include "globals.h"
 #include "helpers.h"
 #include "error.h"
+#include "gif.h"
 #include "bmp.h"
 
 /**

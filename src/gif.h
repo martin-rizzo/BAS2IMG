@@ -32,7 +32,7 @@
 #ifndef bas2img_gif_h
 #define bas2img_gif_h
 #include <stdio.h>
-#include "types.h"
+#include "globals.h"
 
 
 /**

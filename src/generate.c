@@ -32,8 +32,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "bas2img.h"
-#include "types.h"
+#include "globals.h"
 #include "helpers.h"
 #include "error.h"
 #include "database.h"
