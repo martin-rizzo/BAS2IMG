@@ -123,8 +123,7 @@ static int cmdGenerateImage(int argc, char* argv[]) {
         "   bas2img <command> [options]"
         "",
         "  OPTIONS:",
-        "    -b  --bmp                generate BMP image (default)",
-        "    -g  --gif                generate GIF image",
+        "    -b  --bmp                generate BMP image",
         "    -c  --char-width <n>     width of each character in pixels (default = 8)",
         "    -l  --line-length <n>    maximum number of character per line (default = 0)",
         "    -w  --wrap               wrap long lines",
@@ -150,7 +149,7 @@ static int cmdGenerateImage(int argc, char* argv[]) {
     config.padding      = 0;
     config.lineWidth    = 0;
     config.lineWrapping = FALSE;
-    config.imageFormat  = BMP;
+    config.imageFormat  = GIF;
     config.orientation  = HORIZONTAL;
     config.computer     = NULL;
 
@@ -161,7 +160,6 @@ static int cmdGenerateImage(int argc, char* argv[]) {
             else                     { basicFilePath = param; }
         }
         else if ( isOption(param,"-b","--bmp"        ) ) { config.imageFormat=BMP;          }
-        else if ( isOption(param,"-g","--gif"        ) ) { config.imageFormat=GIF;          }
         else if ( isOption(param,"-c","--char-width" ) ) { config.charWidth=atoi(getOptionCfg(&i,argc,argv)); }
         else if ( isOption(param,"-l","--line-length") ) { config.lineWidth=atoi(getOptionCfg(&i,argc,argv)); }
         else if ( isOption(param,"-w","--wrap"       ) ) { config.lineWrapping=TRUE; }
@@ -262,7 +260,6 @@ static Bool cmdExportFont(int argc, char* argv[]) {
         "   bas2img export-font [options] <computer-name>",
         "",
         "  OPTIONS:",
-        "    -g  --gif                generate a GIF image",
         "    -b  --bmp                generate a BMP image",
         "    -f  --font <font-name>   ignore computer and export the specified font",
         "    -H  --horizontal         use horizontal orientation (default)",
@@ -274,14 +271,13 @@ static Bool cmdExportFont(int argc, char* argv[]) {
     const utf8* computerName   = NULL;
     const utf8* fontName       = NULL;
     const utf8* outputFilePath = NULL;
-    ImageFormat imageFormat    = BMP;
+    ImageFormat imageFormat    = GIF;
     Orientation orientation    = HORIZONTAL;
     Bool printHelpAndExit      = (argc<=1);
     assert( argv!=NULL );
     /* process al parameters */
     for (i=1; i<argc; ++i) { param=argv[i];
         if      ( firstChar(param)!='-'                ) { computerName     = param;      }
-        else if ( isOption(param,"-g","--gif"        ) ) { imageFormat      = GIF;        }
         else if ( isOption(param,"-b","--bmp"        ) ) { imageFormat      = BMP;        }
         else if ( isOption(param,"-f","--font"       ) ) { fontName         = getOptionCfg(&i,argc,argv); }
         else if ( isOption(param,"-H","--horizontal" ) ) { orientation      = HORIZONTAL; }
