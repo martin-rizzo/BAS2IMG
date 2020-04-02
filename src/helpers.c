@@ -78,12 +78,21 @@ long getFileSize(FILE *file) {
 
 /**
  * Returns the file extension corresponding to the image format
+ * @param imageFormat    The format of the image, ex: GIF, BMP, ...
+ * @param referencePath  (optional) A path the reference to the original file, can be NULL.
  */
-const utf8 * getImageExtension(ImageFormat imageFormat) {
+const utf8 * getImageExtension(ImageFormat imageFormat, const utf8* referencePath) {
+    Bool uppercase=FALSE; const utf8 *ext, *ptr;
+    
+    if (referencePath) {
+        ext=NULL;
+        for (ptr=referencePath; *ptr!='\0'; ++ptr) { if (*ptr==EXT_SEPARATOR) { ext=ptr+1; } }
+        uppercase = ext!=NULL && ('A'<=*ext && *ext<='Z');
+    }
     switch(imageFormat) {
-        case BMP: return ".bmp";
-        case GIF: return ".gif";
-        default:  return ".nil";
+        case BMP: return uppercase ? ".BMP" : ".bmp";
+        case GIF: return uppercase ? ".GIF" : ".gif";
+        default:  return uppercase ? ".NIL" : ".nil";
     }
 }
 

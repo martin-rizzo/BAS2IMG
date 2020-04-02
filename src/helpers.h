@@ -54,10 +54,10 @@ long getFileSize(FILE *file);
 
 /**
  * Returns the file extension corresponding to the image format
+ * @param imageFormat    The format of the image, ex: GIF, BMP, ...
+ * @param referencePath  (optional) A path the reference to the original file, can be NULL.
  */
-const utf8 * getImageExtension(ImageFormat imageFormat);
-
-
+const utf8 * getImageExtension(ImageFormat imageFormat, const utf8* referencePath);
 
 
 const utf8 * allocConcatenation(const utf8 *firstString, const utf8 *secondString);

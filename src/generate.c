@@ -142,7 +142,7 @@ Bool generateImageFromBASIC(const utf8     *imageFilePath,
                             const utf8     *basicFilePath,
                             const Config   *config)
 {
-    const utf8 * imageExtension;
+    const utf8  *imageExtension, *basicFileName;
     FILE *imageFile=NULL, *basicFile=NULL;
     Byte *basicBuffer=NULL; long basicBufferSize=0;
     
@@ -150,11 +150,12 @@ Bool generateImageFromBASIC(const utf8     *imageFilePath,
     
     /* add extensions (when appropiate) */
     basicFilePath = allocFilePath(basicFilePath, ".bas", OPTIONAL_EXTENSION);
+    basicFileName = allocFileNameWithExtension(basicFilePath);
     
     /* make the path to the image file */
-    imageExtension = getImageExtension(config->imageFormat);
+    imageExtension = getImageExtension(config->imageFormat,basicFilePath);
     if (imageFilePath) { imageFilePath = allocFilePath(imageFilePath,imageExtension,OPTIONAL_EXTENSION); }
-    else               { imageFilePath = allocFilePath(basicFilePath,imageExtension,FORCED_EXTENSION  ); }
+    else               { imageFilePath = allocFilePath(basicFileName,imageExtension,FORCED_EXTENSION  ); }
     
     /*-------------------------------------------------------------------*/
 
@@ -190,6 +191,7 @@ Bool generateImageFromBASIC(const utf8     *imageFilePath,
     if (basicBuffer  ) { free((void*)basicBuffer); }
     if (basicFile    ) { fclose(basicFile); }
     if (imageFile    ) { fclose(imageFile); }
+    if (basicFileName) { free((void*)basicFileName); }
     if (basicFilePath) { free((void*)basicFilePath); }
     if (imageFilePath) { free((void*)imageFilePath); }
     return success ? TRUE : FALSE;
