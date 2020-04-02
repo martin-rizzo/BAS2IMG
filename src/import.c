@@ -162,20 +162,16 @@ static Bool writeCArrayFromBitmapFile(FILE       *outputFile,
  *
  * @param outputFilePath The path to the file where the generated C code will be written (NULL = use image name)
  * @param imageFilePath  The path to the input image
- * @param imageFormat    The format of the input image (only BMP format is supported)
  * @param orientation    The order of characters in the image (vertical slices, horizontal slices)
  */
 Bool importArrayFromImage(const utf8  *outputFilePath,
                           const utf8  *imageFilePath,
-                          ImageFormat  imageFormat,
                           Orientation  orientation)
 {
     FILE *outputFile=NULL, *imageFile=NULL; long imageFileSize=0;
     const utf8 *outputName, *fontName;
     assert( imageFilePath!=NULL );
-    assert( imageFormat==BMP || imageFormat==GIF );
     assert( orientation==HORIZONTAL || orientation==VERTICAL );
-    if (imageFormat==GIF) { return error(ERR_GIF_NOT_SUPPORTED,0); }
     
     /* add extensions (when appropiate) */
     imageFilePath = allocFilePath(imageFilePath, ".bmp", OPTIONAL_EXTENSION);

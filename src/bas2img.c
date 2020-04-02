@@ -119,17 +119,17 @@ static int cmdGenerateImage(int argc, char* argv[]) {
     int i; const utf8 *param; Config config;
     static const utf8 *help[] = {
         "USAGE:",
-        "   bas2img #<computer-name> [options] file.bas",
-        "   bas2img COMMAND [options]"
+        "   bas2img <computer-name> [options] file.bas",
+        "   bas2img <command> [options]"
         "",
         "  OPTIONS:",
-        "    !<font-name>             force to use a specific font",
         "    -b  --bmp                generate BMP image (default)",
         "    -g  --gif                generate GIF image",
         "    -c  --char-width <n>     width of each character in pixels (default = 8)",
         "    -l  --line-length <n>    maximum number of character per line (default = 0)",
         "    -w  --wrap               wrap long lines",
         "    -s  --scale <n>          scale each character by <n>",
+        "    -f  --font <font-name>   force to use a specific font",
         "    -H  --horizontal         use horizontal orientation (default)",
         "    -V  --vertical           use vertical orientation",
         "    -o  --output <file>      write the generated image to <file>",
@@ -156,15 +156,17 @@ static int cmdGenerateImage(int argc, char* argv[]) {
 
     /* process all parameters */
     for (i=1; i<argc; ++i) { param=argv[i];
-        if      ( firstChar(param)=='#' ) { computerName  = param; }
-        else if ( firstChar(param)=='!' ) { fontName      = param; }
-        else if ( firstChar(param)!='-' ) { basicFilePath = param; }
+        if ( firstChar(param)!='-' ) {
+            if ( computerName==NULL) { computerName  = param; }
+            else                     { basicFilePath = param; }
+        }
         else if ( isOption(param,"-b","--bmp"        ) ) { config.imageFormat=BMP;          }
         else if ( isOption(param,"-g","--gif"        ) ) { config.imageFormat=GIF;          }
         else if ( isOption(param,"-c","--char-width" ) ) { config.charWidth=atoi(getOptionCfg(&i,argc,argv)); }
         else if ( isOption(param,"-l","--line-length") ) { config.lineWidth=atoi(getOptionCfg(&i,argc,argv)); }
         else if ( isOption(param,"-w","--wrap"       ) ) { config.lineWrapping=TRUE; }
         else if ( isOption(param,"-s","--scale"      ) ) { config.charScale=atoi(getOptionCfg(&i,argc,argv)); }
+        else if ( isOption(param,"-f","--font"       ) ) { fontName = getOptionCfg(&i,argc,argv); }
         else if ( isOption(param,"-H","--horizontal" ) ) { config.orientation=HORIZONTAL;   }
         else if ( isOption(param,"-V","--vertical"   ) ) { config.orientation=VERTICAL;     }
         else if ( isOption(param,"-o","--output"     ) ) { outputFilePath=param; }
@@ -254,20 +256,22 @@ static Bool cmdListFonts(int argc, char* argv[]) {
  * @returns     `TRUE` if the font is exported successfully
  */
 static Bool cmdExportFont(int argc, char* argv[]) {
-    int i; const utf8 *param; const Font* font;
+    int i; const utf8 *param; const Font* font; const Computer* computer;
     static const utf8 *help[] = {
         "USAGE:",
-        "   bas2img export-font [options] !<font-name>",
+        "   bas2img export-font [options] <computer-name>",
         "",
         "  OPTIONS:",
         "    -g  --gif                generate a GIF image",
         "    -b  --bmp                generate a BMP image",
+        "    -f  --font <font-name>   ignore computer and export the specified font",
         "    -H  --horizontal         use horizontal orientation (default)",
         "    -V  --vertical           use vertical orientation",
         "    -o  --output <file>      write the output image to <file>",
         "    -h  --help               display this help and exit",
         NULL
     };
+    const utf8* computerName   = NULL;
     const utf8* fontName       = NULL;
     const utf8* outputFilePath = NULL;
     ImageFormat imageFormat    = BMP;
@@ -276,9 +280,10 @@ static Bool cmdExportFont(int argc, char* argv[]) {
     assert( argv!=NULL );
     /* process al parameters */
     for (i=1; i<argc; ++i) { param=argv[i];
-        if      ( firstChar(param)=='!'                ) { fontName         = param;      }
+        if      ( firstChar(param)!='-'                ) { computerName     = param;      }
         else if ( isOption(param,"-g","--gif"        ) ) { imageFormat      = GIF;        }
         else if ( isOption(param,"-b","--bmp"        ) ) { imageFormat      = BMP;        }
+        else if ( isOption(param,"-f","--font"       ) ) { fontName         = getOptionCfg(&i,argc,argv); }
         else if ( isOption(param,"-H","--horizontal" ) ) { orientation      = HORIZONTAL; }
         else if ( isOption(param,"-V","--vertical"   ) ) { orientation      = VERTICAL;   }
         else if ( isOption(param,"-o","--output"     ) ) { outputFilePath   = param;      }
@@ -287,9 +292,19 @@ static Bool cmdExportFont(int argc, char* argv[]) {
     }
     
     if ( printHelpAndExit ) { return printHelp(help,FALSE); }
-    
-    if (!fontName) { return error(ERR_MISSING_FONT_NAME,0); }
-    font = getFont(fontName);
+
+    /* first try to select the font by its name */
+    if (fontName) {
+        font = getFont(fontName);
+    }
+    /* when font name is not present, try to select it indrectly by the computer name */
+    else {
+        assert( !fontName );
+        if (!computerName) { return error(ERR_MISSING_COMPUTER_NAME,0); }
+        computer = getComputer(computerName);
+        if (!computer) { return error(ERR_NONEXISTENT_COMPUTER,computerName); }
+        font = computer->font;
+    }
     if (!font) { return error(ERR_NONEXISTENT_FONT,fontName); }
     exportFont(font,imageFormat,orientation);
     return success ? TRUE : FALSE;
@@ -305,11 +320,9 @@ static Bool cmdImportFont(int argc, char* argv[]) {
     int i; const utf8 *param;
     static const utf8 *help[] = {
         "USAGE:",
-        "   bas2img import-font [options] <image-file>",
+        "   bas2img import-font [options] file.bmp",
         "",
         "  OPTIONS:",
-        "    -g  --gif                generate GIF image",
-        "    -b  --bmp                generate BMP image (default)",
         "    -H  --horizontal         use horizontal orientation (default)",
         "    -V  --vertical           use vertical orientation",
         "    -o  --output <file>      write the generated C source code to <file>",
@@ -319,15 +332,12 @@ static Bool cmdImportFont(int argc, char* argv[]) {
     const utf8* fontName       = NULL;
     const utf8* imageFilePath  = NULL;
     const utf8* outputFilePath = NULL;
-    ImageFormat imageFormat    = BMP;
     Orientation orientation    = HORIZONTAL;
     Bool printHelpAndExit      = (argc<=1);
     assert( argv!=NULL );
     /* process al parameters */
     for (i=1; i<argc; ++i) { param=argv[i];
         if      ( firstChar(param)=='!'                ) { fontName         = param;      }
-        else if ( isOption(param,"-g","--gif"        ) ) { imageFormat      = GIF;        }
-        else if ( isOption(param,"-b","--bmp"        ) ) { imageFormat      = BMP;        }
         else if ( isOption(param,"-H","--horizontal" ) ) { orientation      = HORIZONTAL; }
         else if ( isOption(param,"-V","--vertical"   ) ) { orientation      = VERTICAL;   }
         else if ( isOption(param,"-o","--output"     ) ) { outputFilePath   = param;      }
@@ -338,7 +348,7 @@ static Bool cmdImportFont(int argc, char* argv[]) {
     if ( printHelpAndExit ) { return printHelp(help,FALSE); }
     
     if (!imageFilePath) { return error(ERR_MISSING_FONTIMG_PATH,0); }
-    importArrayFromImage(outputFilePath, imageFilePath, imageFormat, orientation);
+    importArrayFromImage(outputFilePath, imageFilePath, orientation);
     return success ? TRUE : FALSE;
 }
 
