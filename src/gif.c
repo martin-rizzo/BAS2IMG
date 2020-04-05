@@ -31,6 +31,7 @@
  */
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include "gif.h"
 #define CHUNK_MAX_LENGTH 255 /* < maximum length of each data-chunk contained in the RASTER DATA BLOCK */
 
@@ -52,8 +53,13 @@ static void initBitBuffer(BitBuffer* buffer) {
 
 
 static Bool fwriteCode(unsigned code, unsigned length, BitBuffer* buffer, FILE* file) {
+    unsigned i;
+    assert( length>0 );
+    assert( code < (1<<length) );
+    assert( buffer!=NULL );
+    assert( file!=NULL );
     
-    int i; for (i=0; i<length; ++i) {
+    for (i=0; i<length; ++i) {
         buffer->byte |= (code&0x01) << buffer->shift++;
         if (buffer->shift>7) {
             buffer->array[buffer->index++] = buffer->byte;
@@ -69,6 +75,11 @@ static Bool fwriteCode(unsigned code, unsigned length, BitBuffer* buffer, FILE* 
     return TRUE;
 }
 
+/**
+ * Clears the buffer and causes any buffered data to be written to the file
+ * @param buffer  The buffer containing the bits to flush
+ * @param file    The output file where the image will be written
+ */
 static void flushBitBuffer(BitBuffer* buffer, FILE* file) {
     if (buffer->shift>0) { buffer->array[buffer->index++] = buffer->byte; }
     if (buffer->index>0) {
@@ -116,6 +127,48 @@ static Bool fwritePaletteBGRA(const Byte* bgraColors, int sizeInBytes, int numbe
     }
     return TRUE;
 }
+
+
+/*=================================================================================================================*/
+#pragma mark - > TABLE
+
+typedef struct StrTable {
+    int array[4096*256];
+    int size;
+} StrTable;
+
+
+
+StrTable* allocStrTable(void) {
+    return malloc(sizeof(StrTable));
+}
+
+void initStrTable(StrTable* table,int size) {
+    assert( size>0 );
+    memset(table,0,sizeof(StrTable));
+    table->size = size;
+}
+
+int findConcatenation(StrTable* table, int strCode, int pixel) {
+    int index, concatCode;
+    assert( strCode<4096 );
+    assert( 0<=pixel && pixel<256 );
+    
+    if (strCode<0) { return pixel; }
+    index      = (strCode<<8) | pixel;
+    concatCode = table->array[index];
+    if ( concatCode ) { assert(concatCode!=pixel); return concatCode; }
+    table->array[index] = table->size++;
+    return -1;
+}
+
+
+void freeStrTable(StrTable* table) {
+    free((void*)table);
+}
+
+
+
 
 
 /*=================================================================================================================*/
@@ -207,13 +260,16 @@ static Bool fwriteLzwImage(int         width,
                            FILE*       file)
 {
     int x,y; Bool upsideDown=FALSE;
-    const unsigned initialCodeSize  = (bitsPerPixel>2) ? bitsPerPixel : 2;
-    const unsigned clearCode        = 1 << initialCodeSize;
-    const unsigned endOfInformation = clearCode+1;
-    unsigned codeSize = initialCodeSize+1;
-  /*unsigned code     = -1; */
-    unsigned nextCode;
+    const int initialCodeSize  = (bitsPerPixel>2) ? bitsPerPixel : 2;
+    const int clearCode        = 1 << initialCodeSize;
+    const int endOfInformation = clearCode+1;
+    const int initialTableSize = endOfInformation+1;
+    int codeSize    = initialCodeSize+1;
+    int strCode     = -1;
+    int prevStrCode = -1;
+    int pixel;
 
+    StrTable* strTable;
     BitBuffer buffer;
     const Byte *pixels, *scanline;
     
@@ -224,9 +280,12 @@ static Bool fwriteLzwImage(int         width,
     if ( scanlineSize<0 ) { scanlineSize=-scanlineSize; upsideDown=TRUE; }
     assert( scanlineSize>=(width*bitsPerPixel/8) );
     
+    strTable = allocStrTable();
+    initStrTable(strTable, initialTableSize);
     initBitBuffer(&buffer);
     fputc(initialCodeSize,file);
     
+    fwriteCode(clearCode, codeSize, &buffer,file);
     pixels = (const Byte*)pixelData;
     for (y=0; y<height; ++y) {
         scanline = &pixels[ scanlineSize * (upsideDown ? (height-y-1) : y) ];
@@ -235,22 +294,51 @@ static Bool fwriteLzwImage(int         width,
             /* get pixel color at position x,y */
             switch (bitsPerPixel) {
                 default:
-                case 8: nextCode = scanline[x]; break;
-              /*case 4: nextCode = scanline[x/2]>>(4*(~x&1)) & 0x0F; break;*/
-                case 1: nextCode = scanline[x/8]>>(~x&7)     & 0x01; break;
+                case 8: pixel = scanline[x]; break;
+              /*case 4: pixel = scanline[x/2]>>(4*(~x&1)) & 0x0F; break;*/
+                case 1: pixel = scanline[x/8]>>(~x&7)     & 0x01; break;
             }
-            /* writting with no compression */
-            fwriteCode( nextCode, codeSize,  &buffer,file);
+            
+#       if defined(DISABLE_GIF_COMPRESSION)
+            
+            /* write with no compression */
+            fwriteCode(    pixel, codeSize,  &buffer,file);
             fwriteCode(clearCode, codeSize,  &buffer,file);
+            
+#       else
+            
+            /* write using LZW compression */
+            strCode = findConcatenation(strTable, prevStrCode, pixel);
+            if (strCode<0) {
+                strCode = pixel;
+                fwriteCode(prevStrCode,codeSize, &buffer,file);
+                if ( strTable->size > (1<<codeSize) ) {
+                    if ( ++codeSize==13 ) {
+                        codeSize = initialCodeSize+1;
+                        initStrTable(strTable,initialTableSize);
+                        fwriteCode(clearCode, 12, &buffer,file);
+                    }
+                }
+            }
+            prevStrCode = strCode;
+
+#       endif
             
         }
     }
     
-    /* fwriteCode( code       , codeSize        ,  &buffer,file); */
-    /* fwriteCode( clearCode  , codeSize        ,  &buffer,file); */
-    fwriteCode( endOfInformation, initialCodeSize,  &buffer,file);
+    /* write the last pending sequence and the "end-of-info" delimiter */
+    fwriteCode( prevStrCode,      codeSize,  &buffer,file);
+    fwriteCode( endOfInformation, codeSize,  &buffer,file);
+    
+    /* flush any remaining data contained in the bit-buffer */
     flushBitBuffer(&buffer, file);
+    
+    /* write image block terminator */
     fputc(0, file);
+    
+    /* release resources and return*/
+    freeStrTable(strTable);
     return TRUE;
 }
 
